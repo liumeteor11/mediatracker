@@ -25,9 +25,10 @@
       "electron/**/*"
     ],
     "mac": {
+      "identity": null,
       "target": [
         "dmg",
-        "pkg"
+        "zip"
       ],
       "category": "public.app-category.entertainment"
     },
