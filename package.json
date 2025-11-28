@@ -2,7 +2,10 @@
   "name": "mediatracker-ai",
   "version": "1.0.0",
   "description": "An intelligent media tracking application powered by Moonshot AI",
-  "author": "MediaTracker AI Team",
+  "author": {
+    "name": "MediaTracker AI Team",
+    "email": "support@mediatracker.ai"
+  },
   "homepage": "./",
   "main": "electron/main.js",
   "type": "module",
@@ -45,7 +48,8 @@
         "deb",
         "rpm"
       ],
-      "category": "Entertainment"
+      "category": "Entertainment",
+      "maintainer": "MediaTracker AI Team <support@mediatracker.ai>"
     },
     "nsis": {
       "oneClick": false,
