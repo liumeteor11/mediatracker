@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - name: Check out Git repository
@@ -36,6 +36,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y rpm graphicsmagick
+
+      - name: Fix macOS permissions
+        if: matrix.os == 'macos-latest'
+        run: |
+          chmod -R 755 node_modules/app-builder-bin/mac || true
 
       - name: Build Electron App
         env:
