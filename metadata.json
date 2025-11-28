@@ -1,0 +1,5 @@
+{
+  "name": "MediaTracker AI",
+  "description": "An intelligent media tracking application powered by Moonshot AI. Search for books, movies, and shows, and organize them into collections.",
+  "requestFramePermissions": []
+}
