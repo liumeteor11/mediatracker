@@ -29,7 +29,7 @@
     ],
     "mac": {
       "identity": null,
-      "icon": "public/icon.svg",
+      "icon": "public/icon.png",
       "target": [
         "dmg",
         "zip"
@@ -40,10 +40,10 @@
       "target": [
         "nsis"
       ],
-      "icon": "public/icon.svg"
+      "icon": "public/icon.png"
     },
     "linux": {
-      "icon": "public/icon.svg",
+      "icon": "public/icon.png",
       "target": [
         "deb",
         "rpm"
@@ -60,7 +60,8 @@
   },
   "dependencies": {
     "dotenv": "^17.2.3",
-    "openai": "^6.9.1"
+    "openai": "^6.9.1",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@hookform/resolvers": "^5.2.2",
