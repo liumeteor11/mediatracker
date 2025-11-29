@@ -12,6 +12,8 @@ jobs:
     permissions:
       contents: write
     strategy:
+      # Prevent concurrent jobs from modifying the same Release simultaneously
+      max-parallel: 1
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
