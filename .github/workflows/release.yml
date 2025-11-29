@@ -42,5 +42,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm run electron:build -- --publish always
+          npm run electron:build -- --publish "always" --config.releaseInfo.releaseName="${{ github.ref_name }}"
 
