@@ -15,7 +15,7 @@ jobs:
       # Prevent concurrent jobs from modifying the same Release simultaneously
       max-parallel: 1
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
       - name: Check out Git repository
