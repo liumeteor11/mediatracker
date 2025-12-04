@@ -1,0 +1,62 @@
+# MediaTracker AI
+
+[English](README.md) | [中文文档](README_zh-CN.md)
+
+一个由 AI（Moonshot, OpenAI, DeepSeek 等）驱动的智能媒体追踪应用。搜索书籍、电影和节目，并通过 AI 驱动的推荐和洞察将它们整理到收藏夹中。
+
+## 功能特点
+
+- **AI 驱动追踪**：利用先进的 AI 模型自动获取书籍、电影和电视剧的详细信息。
+- **智能搜索**：集成网络搜索（Google, Bing, Yandex）以获取最新信息。
+- **隐私优先**：您的 API 密钥在本地加密存储。
+- **多供应商支持**：支持 Moonshot AI (Kimi), OpenAI, DeepSeek, Qwen, Google Gemini, Mistral 以及自定义端点。
+- **仪表盘**：可视化的媒体消费统计数据。
+- **本地 Web 应用**：在您的机器上本地运行，以实现最大的隐私和控制。
+
+##先决条件
+
+- Node.js v18 或更高版本
+- npm 或 yarn
+
+## 安装与使用 (Windows)
+
+我们提供了一个简单的设置脚本，帮助您快速开始。
+
+1. **双击项目文件夹中的 `setup.bat`**。
+   - 这将验证 Node.js 安装。
+   - 安装所有必要的依赖项。
+   - 在您的桌面上创建一个 **MediaTracker AI** 快捷方式。
+   - 自动启动应用程序。
+
+2. **通过桌面快捷方式启动**
+   - 以后，只需双击桌面上的 **MediaTracker AI** 图标即可启动应用程序。
+
+## 手动安装
+
+如果您更喜欢从命令行手动运行：
+
+1. 安装依赖项：
+   ```bash
+   npm install
+   ```
+
+2. 启动开发服务器：
+   ```bash
+   npm run dev
+   ```
+
+3. 打开浏览器访问显示的地址（通常是 `http://localhost:2333`）。
+
+## 配置
+
+首次启动时，请转到**设置**面板（齿轮图标）配置您的 AI 提供商：
+
+- **Moonshot AI (Kimi)**：推荐用于中文内容。
+- **OpenAI / DeepSeek**：通用用途。
+- **搜索配置**：启用 Google 或 Serper 搜索以进行实时信息检索。
+
+所有 API 密钥都存储在您浏览器的本地存储中，永远不会发送到我们的服务器。
+
+## 许可证
+
+本项目采用 MIT 许可证 - 详情请参阅 [LICENSE](LICENSE) 文件。

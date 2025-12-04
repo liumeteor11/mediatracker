@@ -1,5 +1,7 @@
 # MediaTracker AI
 
+[English](README.md) | [中文文档](README_zh-CN.md)
+
 An intelligent media tracking application powered by AI (Moonshot, OpenAI, DeepSeek, etc.). Search for books, movies, and shows, and organize them into collections with AI-driven recommendations and insights.
 
 ## Features
