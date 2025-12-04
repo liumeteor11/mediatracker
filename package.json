@@ -7,65 +7,14 @@
     "email": "support@mediatracker.ai"
   },
   "homepage": "./",
-  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "electron:dev": "concurrently -k \"cross-env BROWSER=none npm run dev\" \"wait-on http://localhost:2333 && cross-env NODE_ENV=development electron .\"",
-    "electron:build": "npm run build && electron-builder"
-  },
-  "build": {
-    "appId": "com.mediatracker.ai",
-    "productName": "MediaTracker AI",
-    "compression": "maximum",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "!**/*.map",
-      "!**/*.ts",
-      "!**/*.tsx",
-      "!**/*.md"
-    ],
-    "mac": {
-      "identity": null,
-      "icon": "public/icon.png",
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
-      "category": "public.app-category.entertainment"
-    },
-    "win": {
-      "target": [
-        "nsis"
-      ],
-      "icon": "public/icon.png"
-    },
-    "linux": {
-      "icon": "public/icon.png",
-      "target": [
-        "deb",
-        "rpm"
-      ],
-      "category": "Entertainment",
-      "maintainer": "MediaTracker AI Team <support@mediatracker.ai>"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    }
+    "preview": "vite preview"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
-    "electron-squirrel-startup": "^1.0.1",
     "openai": "^6.9.1"
   },
   "devDependencies": {
@@ -79,12 +28,9 @@
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.22",
     "clsx": "^2.1.1",
-    "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
-    "electron": "^39.2.4",
-    "electron-builder": "^26.0.12",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.554.0",
     "postcss": "^8.5.6",
@@ -102,7 +48,6 @@
     "typescript": "~5.8.2",
     "uuid": "^13.0.0",
     "vite": "^6.2.0",
-    "wait-on": "^9.0.3",
     "zod": "^4.1.13",
     "zustand": "^5.0.8"
   }

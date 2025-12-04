@@ -9,65 +9,51 @@ An intelligent media tracking application powered by AI (Moonshot, OpenAI, DeepS
 - **Privacy Focused**: Your API keys are encrypted and stored locally.
 - **Multi-Provider Support**: Works with Moonshot AI (Kimi), OpenAI, DeepSeek, Qwen, Google Gemini, Mistral, and custom endpoints.
 - **Dashboard**: Visual statistics of your media consumption.
-- **Cross-Platform**: Available on Windows, macOS, and Linux (via Electron).
+- **Local Web App**: Runs locally on your machine for maximum privacy and control.
 
 ## Prerequisites
 
 - Node.js v18 or higher
 - npm or yarn
 
-## Installation
+## Installation & Usage (Windows)
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/mediatracker-ai.git
-   cd mediatracker-ai
-   ```
+We provide a simple setup script to get you started quickly.
 
-2. Install dependencies:
+1. **Double-click `setup.bat`** in the project folder.
+   - This will verify Node.js installation.
+   - Install all necessary dependencies.
+   - Create a **MediaTracker AI** shortcut on your Desktop.
+   - Launch the application automatically.
+
+2. **Launch via Desktop Shortcut**
+   - In the future, simply double-click the **MediaTracker AI** icon on your Desktop to start the app.
+
+## Manual Installation
+
+If you prefer to run it manually from the command line:
+
+1. Install dependencies:
    ```bash
    npm install
    ```
 
-3. Configure environment variables:
-   Copy `.env.example` to `.env` (or `.env.local`) and fill in the values.
+2. Start the development server:
    ```bash
-   cp .env.example .env
+   npm run dev
    ```
 
-   Edit `.env` and set your API keys:
-   ```env
-   # API Keys
-   VITE_OMDB_API_KEY=your_omdb_api_key
-   MOONSHOT_API_KEY=your_moonshot_api_key
-   
-   # App Configuration
-   VITE_SECRET_KEY=your_secret_key_for_local_encryption
-   ```
-
-## Usage
-
-### Development
-
-Run the application in development mode (Vite + Electron):
-
-```bash
-npm run electron:dev
-```
-
-### Build
-
-Build the application for production:
-
-```bash
-npm run electron:build
-```
-
-The output will be in the `release` directory.
+3. Open your browser to the address shown (usually `http://localhost:2333`).
 
 ## Configuration
 
-You can configure the AI provider and search settings within the application's settings panel.
+Upon first launch, go to the **Settings** panel (gear icon) to configure your AI provider:
+
+- **Moonshot AI (Kimi)**: Recommended for Chinese content.
+- **OpenAI / DeepSeek**: General purpose.
+- **Search Configuration**: Enable Google or Serper search for real-time information retrieval.
+
+All API keys are stored locally in your browser's storage and are never sent to our servers.
 
 ## License
 
