@@ -155,6 +155,7 @@ ipcMain.handle('ai-chat', async (event, { messages, temperature = 0.3, apiKey: p
         const docContent = match[1];
         const titleMatch = titleRegex.exec(docContent);
         const urlMatch = urlRegex.exec(docContent);
+        const snippetMatch = snippetRegex.exec(docContent);
         // Clean up XML tags from title/snippet
         const cleanText = (text) => text ? text.replace(/<[^>]+>/g, '') : '';
         
@@ -162,7 +163,7 @@ ipcMain.handle('ai-chat', async (event, { messages, temperature = 0.3, apiKey: p
             results.push({
                 title: cleanText(titleMatch[1]),
                 link: urlMatch[1],
-                snippet: "Click to view content", // Yandex XML snippet parsing is complex with regex, simplified here
+                snippet: snippetMatch ? cleanText(snippetMatch[1] || snippetMatch[2]) : "Click to view content",
                 source: 'Yandex'
             });
             count++;
@@ -280,46 +281,50 @@ ipcMain.handle('ai-chat', async (event, { messages, temperature = 0.3, apiKey: p
     const isSearchEnabled = searchConfig && searchConfig.enabled;
     const currentTools = isSearchEnabled ? tools : undefined;
     
-    // First call to LLM
-    const runner = await client.chat.completions.create({
-      model: model,
-      messages: messages,
-      temperature: temperature,
-      tools: currentTools,
-      tool_choice: isSearchEnabled ? "auto" : undefined,
-    });
+    let currentMessages = [...messages];
+    let turnCount = 0;
+    const MAX_TURNS = 5;
 
-    const message = runner.choices[0].message;
+    while (turnCount < MAX_TURNS) {
+        const runner = await client.chat.completions.create({
+          model: model,
+          messages: currentMessages,
+          temperature: temperature,
+          tools: currentTools,
+          tool_choice: isSearchEnabled ? "auto" : undefined,
+        });
 
-    // Handle Tool Calls
-    if (message.tool_calls && message.tool_calls.length > 0) {
-      const newMessages = [...messages, message];
+        const message = runner.choices[0].message;
 
-      for (const toolCall of message.tool_calls) {
-        if (toolCall.function.name === 'web_search' || toolCall.function.name === 'google_search') {
-          const args = JSON.parse(toolCall.function.arguments);
-          const searchResults = await performWebSearch(args.query, searchConfig);
-          
-          newMessages.push({
-            tool_call_id: toolCall.id,
-            role: "tool",
-            name: toolCall.function.name,
-            content: JSON.stringify(searchResults)
-          });
+        // Handle Tool Calls
+        if (message.tool_calls && message.tool_calls.length > 0) {
+          currentMessages.push(message);
+
+          for (const toolCall of message.tool_calls) {
+            if (toolCall.function.name === 'web_search' || toolCall.function.name === 'google_search') {
+              let args = {};
+              try {
+                   args = JSON.parse(toolCall.function.arguments);
+              } catch (e) {
+                   console.error("Failed to parse tool arguments", e);
+              }
+              const searchResults = await performWebSearch(args.query || "", searchConfig);
+              
+              currentMessages.push({
+                tool_call_id: toolCall.id,
+                role: "tool",
+                name: toolCall.function.name,
+                content: typeof searchResults === 'string' ? searchResults : JSON.stringify(searchResults)
+              });
+            }
+          }
+          turnCount++;
+        } else {
+            return message.content;
         }
-      }
-
-      // Second call to LLM with search results
-      const finalResponse = await client.chat.completions.create({
-        model: model,
-        messages: newMessages,
-        temperature: temperature,
-      });
-
-      return finalResponse.choices[0].message.content;
     }
 
-    return message.content;
+    return ""; // Exceeded max turns
   } catch (error) {
     console.error('AI Chat Error:', error);
     // Fallback: If tool use fails (e.g. model doesn't support it), try without tools

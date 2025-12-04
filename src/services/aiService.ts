@@ -136,7 +136,12 @@ const callAI = async (messages: any[], temperature: number = 0.7, options: { for
         baseUrl: baseURL, 
         model, 
         enableSearch,
-        searchProvider 
+        searchProvider,
+        getDecryptedGoogleKey,
+        googleSearchCx,
+        getDecryptedSerperKey,
+        getDecryptedYandexKey,
+        yandexSearchLogin
     } = state;
 
     // Decrypt the API Key
@@ -150,12 +155,21 @@ const callAI = async (messages: any[], temperature: number = 0.7, options: { for
     // Electron Native AI
     if (window.electron && window.electron.aiChat) {
         try {
+            const searchConfig = {
+                enabled: options.forceSearch || enableSearch,
+                provider: searchProvider,
+                apiKey: searchProvider === 'google' ? getDecryptedGoogleKey() : 
+                        searchProvider === 'serper' ? getDecryptedSerperKey() :
+                        searchProvider === 'yandex' ? getDecryptedYandexKey() : undefined,
+                cx: googleSearchCx,
+                user: yandexSearchLogin
+            };
+
             return await window.electron.aiChat(messages, temperature, {
                 model,
                 baseURL,
                 apiKey,
-                enableSearch: options.forceSearch || enableSearch,
-                searchProvider
+                searchConfig // Pass the full config object
             });
         } catch (e) {
             console.error("Electron AI Chat failed:", e);
