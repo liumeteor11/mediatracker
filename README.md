@@ -13,6 +13,8 @@ An intelligent media tracking application powered by AI (Moonshot, OpenAI, DeepS
 - **Dashboard**: Visual statistics of your media consumption.
 - **Local Web App**: Runs locally on your machine for maximum privacy and control.
 
+  ![collection](./Snipaste_2025-12-04_22-09-50.png)
+
 ## Prerequisites
 
 - Node.js v18 or higher
@@ -51,7 +53,7 @@ If you prefer to run it manually from the command line:
 
 Upon first launch, go to the **Settings** panel (gear icon) to configure your AI provider:
 
-- **Moonshot AI (Kimi)**: Recommended and verified.
+- **Moonshot AI (Kimi)**: Recommended.
 - **OpenAI / DeepSeek**: General purpose.
 - **Search Configuration**: Enable Google or Serper search for real-time information retrieval.
 
