@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
     return {
       base: './', // Ensure relative paths for Electron
       server: {
-        port: 3000,
+        port: 2333,
         host: '0.0.0.0',
         proxy: {
           '/api/moonshot': {

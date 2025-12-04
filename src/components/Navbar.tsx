@@ -21,7 +21,7 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => {
     getAIDate().then(setAiDate);
-  }, []);
+  }, [i18n.language]);
 
   const navLinks = [
     { path: '/', label: t('nav.search'), icon: Search },

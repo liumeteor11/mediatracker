@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Loader2, TrendingUp, AlertCircle, RefreshCw, Edit, X, Save, RotateCcw } from 'lucide-react';
-import { searchMedia, getTrendingMedia } from '../services/aiService';
+import { searchMedia, getTrendingMedia, translateToEnglish } from '../services/aiService';
 import { MediaItem, CollectionCategory, MediaType } from '../types/types';
 import { MediaCard } from '../components/MediaCard';
 import { useCollectionStore } from '../store/useCollectionStore';
@@ -148,8 +148,26 @@ export const SearchPage: React.FC = () => {
       setIsPromptModalOpen(true);
   };
 
-  const savePrompt = () => {
-      setConfig({ trendingPrompt: tempPrompt });
+  const savePrompt = async () => {
+      let finalPrompt = tempPrompt;
+      
+      if (finalPrompt && finalPrompt.trim()) {
+          const toastId = toast.loading(t('search_page.translating') || "Translating prompt...");
+          try {
+              const translated = await translateToEnglish(finalPrompt);
+              if (translated && translated.trim()) {
+                  finalPrompt = translated;
+                  toast.update(toastId, { render: t('search_page.translation_complete') || "Translation complete", type: "success", isLoading: false, autoClose: 2000 });
+              } else {
+                  toast.update(toastId, { render: t('search_page.translation_empty') || "Translation returned empty, using original", type: "warning", isLoading: false, autoClose: 2000 });
+              }
+          } catch (e) {
+              console.error("Translation error", e);
+              toast.update(toastId, { render: t('search_page.translation_failed') || "Translation failed, using original", type: "error", isLoading: false, autoClose: 2000 });
+          }
+      }
+
+      setConfig({ trendingPrompt: finalPrompt });
       setIsPromptModalOpen(false);
       toast.success(t('common.save_success') || "Saved");
       // Reload trending with new prompt

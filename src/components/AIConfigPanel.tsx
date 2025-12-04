@@ -65,7 +65,6 @@ export const AIConfigPanel: React.FC = () => {
   const [localGoogleKey, setLocalGoogleKey] = useState(getDecryptedGoogleKey());
   const [localSerperKey, setLocalSerperKey] = useState(getDecryptedSerperKey());
   const [localYandexKey, setLocalYandexKey] = useState(getDecryptedYandexKey());
-  const [localSystemPrompt, setLocalSystemPrompt] = useState(systemPrompt);
   
   const [showKey, setShowKey] = useState(false);
   const [showGoogleKey, setShowGoogleKey] = useState(false);
@@ -86,9 +85,8 @@ export const AIConfigPanel: React.FC = () => {
     setLocalGoogleKey(getDecryptedGoogleKey());
     setLocalSerperKey(getDecryptedSerperKey());
     setLocalYandexKey(getDecryptedYandexKey());
-    setLocalSystemPrompt(systemPrompt);
     setIsManualInput(false);
-  }, [provider, getDecryptedApiKey, getDecryptedGoogleKey, getDecryptedSerperKey, getDecryptedYandexKey, systemPrompt]);
+  }, [provider, getDecryptedApiKey, getDecryptedGoogleKey, getDecryptedSerperKey, getDecryptedYandexKey]);
 
   const handleSave = () => {
     if (!localKey) {
@@ -114,7 +112,6 @@ export const AIConfigPanel: React.FC = () => {
         baseUrl,
         temperature,
         maxTokens,
-        systemPrompt: localSystemPrompt,
         enableSearch,
         searchProvider,
         googleSearchApiKey: localGoogleKey,
@@ -337,16 +334,6 @@ export const AIConfigPanel: React.FC = () => {
               value={maxTokens}
               onChange={(e) => setConfig({ maxTokens: parseInt(e.target.value) })}
               className="w-full px-4 py-2 rounded-lg border bg-theme-bg border-theme-border text-theme-text focus:ring-2 focus:ring-theme-accent outline-none"
-            />
-          </div>
-
-          <div className="col-span-1 md:col-span-2">
-            <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.system_prompt_label')}</label>
-            <textarea 
-              value={localSystemPrompt}
-              onChange={(e) => setLocalSystemPrompt(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border bg-theme-bg border-theme-border text-theme-text focus:ring-2 focus:ring-theme-accent outline-none h-32 resize-y text-sm font-mono"
-              placeholder={t('ai_config.enter_system_prompt')}
             />
           </div>
         </div>

@@ -329,6 +329,16 @@ const callAI = async (messages: any[], temperature: number = 0.7, options: { for
     }
 };
 
+export const translateToEnglish = async (text: string): Promise<string> => {
+  if (!text || !text.trim()) return "";
+  const messages = [
+    { role: "system", content: "You are a translator. Translate the following text to English. Return only the translated text, nothing else. If the text is already in English, return it as is." },
+    { role: "user", content: text }
+  ];
+  // Use a low temperature for deterministic translation
+  return await callAI(messages, 0.1);
+};
+
 export const searchMedia = async (query: string, type?: MediaType | 'All'): Promise<MediaItem[]> => {
   if (!query.trim()) return [];
 
@@ -798,6 +808,7 @@ const createFallbackItemsFromContext = async (searchContext: string, limit: numb
 };
 
 export const getTrendingMedia = async (): Promise<MediaItem[]> => {
+  const { systemPrompt, trendingPrompt, provider } = useAIStore.getState();
   const dateObj = new Date();
   const today = dateObj.toISOString().split('T')[0];
   const currentYear = dateObj.getFullYear();
@@ -806,62 +817,51 @@ export const getTrendingMedia = async (): Promise<MediaItem[]> => {
   
   const isChinese = i18n.language.startsWith('zh');
   
-  // 1. Perform Manual Search First (More reliable than relying on AI tool calling)
   let searchContext = "";
-  // Use Year+Month for broader hits, and specific "latest" keywords
-  const searchQueries = isChinese 
-      ? [`最新上映电影电视剧排行榜 ${monthStr}`, `最近热门影视作品推荐 ${currentYear}`]
-      : [`new movie releases ${monthStr} ${currentYear}`, `best new tv shows ${monthStr} ${currentYear}`];
 
-  try {
-      // Search for the first query
-      const searchResult = await performClientSideSearch(searchQueries[0], true);
-      if (searchResult) {
-          searchContext = searchResult;
-      } else {
-           // Fallback to second query if first returns nothing
-           const secondResult = await performClientSideSearch(searchQueries[1], true);
-           if (secondResult) searchContext = secondResult;
-      }
-      
-      // DIRECT SEARCH MODE: Bypass AI - DISABLED per user request
-      /*
-      if (searchContext) {
-          console.log("Direct Search Mode (Trending): Returning search results directly without AI processing.");
-          return await createFallbackItemsFromContext(searchContext, 10);
-      } else {
-          console.warn("Direct Search Mode (Trending): No results found.");
-          // return []; // Don't return empty, fall through to AI
-      }
-      */
+  // 1. Perform Manual Search First (ONLY if no custom prompt is set)
+  // If a custom prompt is set, we rely on the AI to call the search tool with relevant keywords
+  if (!trendingPrompt || !trendingPrompt.trim()) {
+      // Use Year+Month for broader hits, and specific "latest" keywords
+      const searchQueries = isChinese 
+          ? [`最新上映电影电视剧排行榜 ${monthStr}`, `最近热门影视作品推荐 ${currentYear}`]
+          : [`new movie releases ${monthStr} ${currentYear}`, `best new tv shows ${monthStr} ${currentYear}`];
 
-  } catch (e) {
-      console.warn("Manual search in getTrendingMedia failed", e);
-      return [];
+      try {
+          // Search for the first query
+          const searchResult = await performClientSideSearch(searchQueries[0], true);
+          if (searchResult) {
+              searchContext = searchResult;
+          } else {
+               // Fallback to second query if first returns nothing
+               const secondResult = await performClientSideSearch(searchQueries[1], true);
+               if (secondResult) searchContext = secondResult;
+          }
+      } catch (e) {
+          console.warn("Manual search in getTrendingMedia failed", e);
+      }
   }
 
   // AI Processing RE-ENABLED
-  // /*
   try {
-      const parsedSC = JSON.parse(searchContext);
-      if (!Array.isArray(parsedSC) || parsedSC.length === 0) {
-          searchContext = "";
+      if (searchContext) {
+          const parsedSC = JSON.parse(searchContext);
+          if (!Array.isArray(parsedSC) || parsedSC.length === 0) {
+              searchContext = "";
+          }
       }
   } catch {
       searchContext = "";
   }
 
   let userPrompt = "";
-  const { systemPrompt, trendingPrompt, provider } = useAIStore.getState();
 
   if (trendingPrompt && trendingPrompt.trim()) {
       userPrompt = trendingPrompt;
-      // Append search context if available
-      if (searchContext) {
-          userPrompt += isChinese 
-            ? `\n\n[系统注入数据]\n当前日期: ${today}\n以下是实时搜索结果：\n${searchContext}\n\n请优先使用上述搜索结果推荐内容。`
-            : `\n\n[System Injection]\nToday's Date: ${today}\nReal-time search results:\n${searchContext}\n\nPlease prioritize these search results for recommendations.`;
-      }
+      // Enforce tool usage for custom prompts
+      userPrompt += isChinese 
+        ? `\n\n[系统提示] 当前日期: ${today}。为了确保推荐内容的实时性和准确性，请务必使用提供的联网搜索工具 (web_search) 来获取最新信息，而不是仅依赖内部知识。`
+        : `\n\n[System Note] Today's Date: ${today}. To ensure recommendations are real-time and accurate, you MUST use the provided 'web_search' tool to fetch the latest information, rather than relying solely on internal knowledge.`;
   } else if (provider === 'moonshot') {
      // For Moonshot, we use our manual "web_search" tool
      searchContext = "";
@@ -1007,15 +1007,19 @@ export const getTrendingMedia = async (): Promise<MediaItem[]> => {
 
 export const getAIDate = async (): Promise<string> => {
     const today = new Date().toISOString().split('T')[0];
-    const cachedDate = localStorage.getItem('media_tracker_ai_date');
-    const cachedContent = localStorage.getItem('media_tracker_ai_date_content');
+    const currentLang = i18n.language.split('-')[0]; // 'en' or 'zh'
+    const cacheKeyDate = `media_tracker_ai_date_${currentLang}`;
+    const cacheKeyContent = `media_tracker_ai_date_content_${currentLang}`;
+    
+    const cachedDate = localStorage.getItem(cacheKeyDate);
+    const cachedContent = localStorage.getItem(cacheKeyContent);
 
     if (cachedDate === today && cachedContent) {
         console.log("[getAIDate] Using cached date:", cachedContent);
         return cachedContent;
     }
 
-    const isChinese = i18n.language.startsWith('zh');
+    const isChinese = currentLang === 'zh';
     const systemPrompt = isChinese ? "你是一个报时助手。" : "You are a time announcement assistant.";
     const userPrompt = isChinese 
         ? `今天是 ${today}。请告诉我今天的日期，并附带一句简短的关于电影或生活的美好寄语（20字以内）。格式：YYYY年MM月DD日 | 寄语`
@@ -1032,8 +1036,8 @@ export const getAIDate = async (): Promise<string> => {
         if (text) {
             const cleanText = text.replace(/"/g, '').trim();
             console.log("[getAIDate] Success:", cleanText);
-            localStorage.setItem('media_tracker_ai_date', today);
-            localStorage.setItem('media_tracker_ai_date_content', cleanText);
+            localStorage.setItem(cacheKeyDate, today);
+            localStorage.setItem(cacheKeyContent, cleanText);
             return cleanText;
         }
     } catch (e) {

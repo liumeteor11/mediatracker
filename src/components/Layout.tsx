@@ -25,8 +25,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </main>
       <footer className="py-8 mt-auto border-t transition-colors duration-300 bg-theme-surface border-theme-border text-theme-subtext">
         <div className="max-w-7xl mx-auto px-4 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} {t('footer.rights_reserved')}</p>
-          <p className="mt-2">{t('footer.powered_by')}</p>
+          <p>Author: liumeteor11@github</p>
         </div>
       </footer>
     </div>

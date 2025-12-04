@@ -110,7 +110,7 @@
     "status_favorites": "最爱"
   },
   "search_page": {
-    "title": "发现你的下一个心头好",
+    "title": "发现你的下一部必看作品",
     "subtitle": "AI 驱动的电影、书籍、电视剧和漫画搜索。",
     "input_placeholder": "搜索 '盗梦空间' 或 '赛博朋克小说'...",
     "search_btn": "搜索",
@@ -137,7 +137,11 @@
     "filter_comics": "漫画",
     "filter_short_dramas": "短剧",
     "filter_music": "音乐",
-    "filter_other": "其他"
+    "filter_other": "其他",
+    "translating": "正在翻译提示词...",
+    "translation_complete": "翻译完成",
+    "translation_empty": "翻译结果为空，使用原始内容",
+    "translation_failed": "翻译失败，使用原始内容"
   },
   "search": {
     "placeholder": "搜索电影、电视剧、书籍...",
