@@ -6,12 +6,24 @@ import { Filter, Search as SearchIcon, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 
 export const CollectionPage: React.FC = () => {
+  const { t } = useTranslation();
   const { collection, moveCategory } = useCollectionStore();
   const [filter, setFilter] = useState<CollectionCategory | 'All'>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const getCategoryLabel = (cat: string) => {
+    switch (cat) {
+        case 'All': return t('search_page.filter_all');
+        case 'To Watch': return t('dashboard.to_watch');
+        case 'Watched': return t('dashboard.status_watched');
+        case 'Favorites': return t('dashboard.status_favorites');
+        default: return cat;
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -29,15 +41,15 @@ export const CollectionPage: React.FC = () => {
 
   const handleMove = (item: MediaItem, category: CollectionCategory) => {
     moveCategory(item.id, category);
-    toast.success(`Moved "${item.title}" to ${category}`);
+    toast.success(t('collection.moved_toast', { title: item.title, category: getCategoryLabel(category) }));
   };
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
-            <h1 className="text-3xl font-bold text-theme-accent">My Collection</h1>
-            <p className="mt-1 text-theme-subtext">Manage and track your media journey</p>
+            <h1 className="text-3xl font-bold text-theme-accent">{t('collection.title')}</h1>
+            <p className="mt-1 text-theme-subtext">{t('collection.subtitle')}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
@@ -45,7 +57,7 @@ export const CollectionPage: React.FC = () => {
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-subtext" />
                 <input 
                     type="text" 
-                    placeholder="Filter collection..." 
+                    placeholder={t('collection.filter_placeholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9 pr-4 py-2 rounded-lg border focus:ring-2 outline-none w-full sm:w-64 transition-all bg-theme-surface border-theme-border text-theme-text focus:border-theme-accent focus:ring-theme-accent/20 placeholder-theme-subtext"
@@ -64,7 +76,7 @@ export const CollectionPage: React.FC = () => {
                             : "bg-theme-surface border border-theme-border text-theme-text hover:bg-theme-bg"
                         )}
                     >
-                        {cat}
+                        {getCategoryLabel(cat)}
                     </button>
                 ))}
             </div>
@@ -74,8 +86,8 @@ export const CollectionPage: React.FC = () => {
       {collection.length === 0 ? (
         <div className="text-center py-20 rounded-2xl border border-dashed bg-theme-surface border-theme-border">
             <Filter className="w-12 h-12 mx-auto mb-4 text-theme-subtext" />
-            <h3 className="text-lg font-medium text-theme-text">Your collection is empty</h3>
-            <p className="mb-6 text-theme-subtext">Start searching to add movies, books, and more.</p>
+            <h3 className="text-lg font-medium text-theme-text">{t('collection.empty_title')}</h3>
+            <p className="mb-6 text-theme-subtext">{t('collection.empty_text')}</p>
         </div>
       ) : (
         <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-y-8 gap-x-6">
@@ -97,7 +109,7 @@ export const CollectionPage: React.FC = () => {
 
       {filteredCollection.length === 0 && collection.length > 0 && (
           <div className="text-center py-12">
-              <p className="text-theme-subtext">No items match your filter.</p>
+              <p className="text-theme-subtext">{t('collection.no_matches')}</p>
           </div>
       )}
 

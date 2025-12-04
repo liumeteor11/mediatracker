@@ -1,73 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { useAIStore, AIProvider, SearchProvider } from '../store/useAIStore';
 import { Save, Activity, CheckCircle, AlertCircle, Eye, EyeOff, Info, List, Globe, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
 
 const PROVIDER_MODELS: Record<string, { name: string; version: string; releaseDate: string }[]> = {
-  moonshot: [
-    { name: 'moonshot-v1-8k', version: 'v1', releaseDate: '2023-10' },
-    { name: 'moonshot-v1-32k', version: 'v1', releaseDate: '2023-10' },
-    { name: 'moonshot-v1-128k', version: 'v1', releaseDate: '2023-10' }
-  ],
-  openai: [
-    { name: 'gpt-4o', version: 'GPT-4o', releaseDate: '2024-05' },
-    { name: 'gpt-4o-mini', version: 'GPT-4o Mini', releaseDate: '2024-07' },
-    { name: 'o1-mini', version: 'o1 Mini', releaseDate: '2024-09' }
-  ],
-  deepseek: [
-    { name: 'deepseek-chat', version: 'V3', releaseDate: '2024-12' },
-    { name: 'deepseek-reasoner', version: 'R1', releaseDate: '2025-01' }
-  ],
-  qwen: [
-    { name: 'qwen-max', version: '2.5', releaseDate: '2024-09' },
-    { name: 'qwen-plus', version: '2.5', releaseDate: '2024-09' },
-    { name: 'qwen-turbo', version: '2.5', releaseDate: '2024-09' }
-  ],
-  google: [
-    { name: 'gemini-1.5-pro', version: '1.5 Pro', releaseDate: '2024-04' },
-    { name: 'gemini-1.5-flash', version: '1.5 Flash', releaseDate: '2024-05' },
-    { name: 'gemini-1.0-pro', version: '1.0 Pro', releaseDate: '2024-02' }
-  ],
-  mistral: [
-    { name: 'mistral-large-latest', version: 'Large 2', releaseDate: '2024-07' },
-    { name: 'mistral-small-latest', version: 'Small', releaseDate: '2024-02' },
-    { name: 'codestral-latest', version: 'Codestral', releaseDate: '2024-05' }
-  ]
-};
-
-const PROVIDER_OPTIONS: { value: AIProvider; label: string }[] = [
-  { value: 'openai', label: 'OpenAI' },
-  { value: 'moonshot', label: 'Moonshot AI (Kimi)' },
-  { value: 'deepseek', label: 'DeepSeek' },
-  { value: 'qwen', label: 'Alibaba Cloud (Qwen)' },
-  { value: 'google', label: 'Google (Gemini)' },
-  { value: 'mistral', label: 'Mistral AI' },
-  { value: 'custom', label: 'Custom (Compatible)' }
-];
-
-const SEARCH_PROVIDER_OPTIONS: { value: SearchProvider; label: string }[] = [
-    { value: 'google', label: 'Google Custom Search' },
-    { value: 'bing', label: 'Bing Web Search' },
-    { value: 'yandex', label: 'Yandex Search' },
-    { value: 'duckduckgo', label: 'DuckDuckGo (Free)' },
-];
+    moonshot: [
+      { name: 'kimi-k2-instruct', version: 'Kimi K2 Instruct', releaseDate: '2025-07' },
+      { name: 'kimi-k2-thinking', version: 'Kimi K2 Thinking', releaseDate: '2025-11' },
+      { name: 'kimi-latest', version: 'Kimi Latest', releaseDate: '2025-11' },
+      { name: 'kimi-k2-base', version: 'Kimi K2 Base', releaseDate: '2025-07' },
+      { name: 'moonshot-v1-8k', version: 'V1 8k', releaseDate: '2024-03' }
+    ],
+    openai: [
+      { name: 'gpt-4o', version: 'GPT-4o', releaseDate: '2024-05' },
+      { name: 'gpt-5', version: 'GPT-5 (Preview)', releaseDate: '2025-12' },
+      { name: 'gpt-4-turbo', version: 'GPT-4 Turbo', releaseDate: '2024-04' }
+    ],
+    deepseek: [
+      { name: 'deepseek-chat', version: 'DeepSeek V3', releaseDate: '2025-09' },
+      { name: 'deepseek-reasoner', version: 'DeepSeek Reasoner (R1)', releaseDate: '2025-01' }
+    ],
+    qwen: [
+      { name: 'qwen-max', version: 'Qwen Max', releaseDate: '2025-11' },
+      { name: 'qwen-plus', version: 'Qwen Plus', releaseDate: '2025-11' }
+    ],
+    google: [
+      { name: 'gemini-2.5-flash', version: 'Gemini 2.5 Flash', releaseDate: '2025-12' },
+      { name: 'gemini-1.5-pro', version: 'Gemini 1.5 Pro', releaseDate: '2024-04' }
+    ],
+    mistral: [
+      { name: 'mistral-large-latest', version: 'Large 3', releaseDate: '2025-11' }
+    ]
+  };
 
 export const AIConfigPanel: React.FC = () => {
+  const { t } = useTranslation();
+  
+  const PROVIDER_OPTIONS: { value: AIProvider; label: string }[] = [
+    { value: 'openai', label: t('ai_config.provider_openai') },
+    { value: 'moonshot', label: t('ai_config.provider_moonshot') },
+    { value: 'deepseek', label: t('ai_config.provider_deepseek') },
+    { value: 'qwen', label: t('ai_config.provider_qwen') },
+    { value: 'google', label: t('ai_config.provider_google') },
+    { value: 'mistral', label: t('ai_config.provider_mistral') },
+    { value: 'custom', label: t('ai_config.provider_custom') }
+  ];
+
+  const SEARCH_PROVIDER_OPTIONS: { value: SearchProvider; label: string }[] = [
+    { value: 'google', label: t('ai_config.search_provider_google') },
+    { value: 'serper', label: t('ai_config.search_provider_serper') },
+    { value: 'yandex', label: t('ai_config.search_provider_yandex') },
+    { value: 'duckduckgo', label: t('ai_config.search_provider_ddg') },
+  ];
+
   const { 
-    provider, apiKey, model, baseUrl, temperature, maxTokens,
+    provider, apiKey, model, baseUrl, temperature, maxTokens, systemPrompt,
     enableSearch, searchProvider, googleSearchCx, yandexSearchLogin,
-    setProvider, setConfig, getDecryptedApiKey, getDecryptedGoogleKey, getDecryptedBingKey, getDecryptedYandexKey
+    setProvider, setConfig, getDecryptedApiKey, getDecryptedGoogleKey, getDecryptedSerperKey, getDecryptedYandexKey
   } = useAIStore();
 
   const [localKey, setLocalKey] = useState(getDecryptedApiKey());
   const [localGoogleKey, setLocalGoogleKey] = useState(getDecryptedGoogleKey());
-  const [localBingKey, setLocalBingKey] = useState(getDecryptedBingKey());
+  const [localSerperKey, setLocalSerperKey] = useState(getDecryptedSerperKey());
   const [localYandexKey, setLocalYandexKey] = useState(getDecryptedYandexKey());
+  const [localSystemPrompt, setLocalSystemPrompt] = useState(systemPrompt);
   
   const [showKey, setShowKey] = useState(false);
   const [showGoogleKey, setShowGoogleKey] = useState(false);
-  const [showBingKey, setShowBingKey] = useState(false);
+  const [showSerperKey, setShowSerperKey] = useState(false);
   const [showYandexKey, setShowYandexKey] = useState(false);
 
   const [isTesting, setIsTesting] = useState(false);
@@ -82,44 +84,46 @@ export const AIConfigPanel: React.FC = () => {
   useEffect(() => {
     setLocalKey(getDecryptedApiKey());
     setLocalGoogleKey(getDecryptedGoogleKey());
-    setLocalBingKey(getDecryptedBingKey());
+    setLocalSerperKey(getDecryptedSerperKey());
     setLocalYandexKey(getDecryptedYandexKey());
+    setLocalSystemPrompt(systemPrompt);
     setIsManualInput(false);
-  }, [provider, getDecryptedApiKey, getDecryptedGoogleKey, getDecryptedBingKey, getDecryptedYandexKey]);
+  }, [provider, getDecryptedApiKey, getDecryptedGoogleKey, getDecryptedSerperKey, getDecryptedYandexKey, systemPrompt]);
 
   const handleSave = () => {
     if (!localKey) {
-        toast.error('API Key is required');
+        toast.error(t('ai_config.api_key_required'));
         return;
     }
     
     if (enableSearch) {
         if (searchProvider === 'google' && (!localGoogleKey || !googleSearchCx)) {
-            toast.warning('Google Search enabled but Key/CX missing.');
+            toast.warning(t('ai_config.google_warning'));
         }
-        if (searchProvider === 'bing' && !localBingKey) {
-            toast.warning('Bing Search enabled but API Key missing.');
+        if (searchProvider === 'serper' && !localSerperKey) {
+            toast.warning(t('ai_config.serper_warning'));
         }
         if (searchProvider === 'yandex' && (!localYandexKey || !yandexSearchLogin)) {
-            toast.warning('Yandex Search enabled but Key/User missing.');
+            toast.warning(t('ai_config.yandex_warning'));
         }
     }
 
     setConfig({
-        apiKey: localKey, // Store will encrypt this
-        googleSearchApiKey: localGoogleKey, // Store will encrypt this
-        bingSearchApiKey: localBingKey,
-        yandexSearchApiKey: localYandexKey,
+        apiKey: localKey,
         model,
         baseUrl,
         temperature,
         maxTokens,
+        systemPrompt: localSystemPrompt,
         enableSearch,
         searchProvider,
+        googleSearchApiKey: localGoogleKey,
         googleSearchCx,
+        serperApiKey: localSerperKey,
+        yandexSearchApiKey: localYandexKey,
         yandexSearchLogin
     });
-    toast.success('Configuration saved successfully');
+    toast.success(t('ai_config.save_success'));
   };
 
   const handleTestConnection = async () => {
@@ -141,7 +145,7 @@ export const AIConfigPanel: React.FC = () => {
                      enabled: true,
                      provider: searchProvider,
                      apiKey: searchProvider === 'google' ? localGoogleKey : 
-                             searchProvider === 'bing' ? localBingKey :
+                             searchProvider === 'serper' ? localSerperKey :
                              searchProvider === 'yandex' ? localYandexKey : undefined,
                      cx: googleSearchCx,
                      user: yandexSearchLogin
@@ -174,7 +178,7 @@ export const AIConfigPanel: React.FC = () => {
             latency: Math.round(endTime - startTime),
             message: 'Connection successful'
         });
-        toast.success('Connection verified!');
+        toast.success(t('ai_config.connection_verified'));
 
     } catch (error: any) {
         setTestResult({
@@ -182,7 +186,7 @@ export const AIConfigPanel: React.FC = () => {
             latency: null,
             message: error.message || 'Connection failed'
         });
-        toast.error(`Connection failed: ${error.message}`);
+        toast.error(`${t('ai_config.connection_failed_prefix')}${error.message}`);
     } finally {
         setIsTesting(false);
     }
@@ -196,14 +200,14 @@ export const AIConfigPanel: React.FC = () => {
     <div className="bg-theme-surface border border-theme-border rounded-xl p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-6 border-b border-theme-border pb-4">
         <Activity className="w-6 h-6 text-theme-accent" />
-        <h2 className="text-xl font-bold text-theme-text">AI Model Configuration</h2>
+        <h2 className="text-xl font-bold text-theme-text">{t('ai_config.title')}</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Column */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-theme-text mb-1">Provider</label>
+            <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.provider_label')}</label>
             <select 
               value={provider} 
               onChange={(e) => setProvider(e.target.value as AIProvider)}
@@ -216,7 +220,7 @@ export const AIConfigPanel: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-theme-text mb-1">Base URL</label>
+            <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.base_url_label')}</label>
             <input 
               type="text" 
               value={baseUrl}
@@ -227,7 +231,7 @@ export const AIConfigPanel: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-theme-text mb-1">API Key</label>
+            <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.api_key_label')}</label>
             <div className="relative">
               <input 
                 type={showKey ? "text" : "password"} 
@@ -246,7 +250,7 @@ export const AIConfigPanel: React.FC = () => {
             </div>
             <p className="text-xs text-theme-subtext mt-1 flex items-center gap-1">
               <Info className="w-3 h-3" />
-              Stored locally with AES encryption
+              {t('ai_config.stored_locally')}
             </p>
           </div>
         </div>
@@ -254,7 +258,7 @@ export const AIConfigPanel: React.FC = () => {
         {/* Right Column */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-theme-text mb-1">Model Name</label>
+            <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.model_name_label')}</label>
             <div className="relative">
                {showInput ? (
                  <div className="flex gap-2">
@@ -263,7 +267,7 @@ export const AIConfigPanel: React.FC = () => {
                      value={model} 
                      onChange={(e) => setConfig({ model: e.target.value })}
                      className="w-full px-4 py-2 rounded-lg border bg-theme-bg border-theme-border text-theme-text focus:ring-2 focus:ring-theme-accent outline-none"
-                     placeholder={provider === 'custom' ? "Enter model name" : "Enter custom model name"}
+                     placeholder={provider === 'custom' ? t('ai_config.enter_model_name') : t('ai_config.enter_custom_model_name')}
                    />
                    {provider !== 'custom' && (
                      <button
@@ -275,7 +279,7 @@ export const AIConfigPanel: React.FC = () => {
                             }
                         }}
                         className="px-3 py-2 rounded-lg border border-theme-border bg-theme-surface hover:bg-theme-bg text-theme-subtext transition-colors"
-                        title="Switch to list selection"
+                        title={t('ai_config.switch_to_list')}
                      >
                         <List className="w-4 h-4" />
                      </button>
@@ -299,7 +303,7 @@ export const AIConfigPanel: React.FC = () => {
                      </option>
                    ))}
                    <option value="__manual__" className="text-theme-accent font-medium bg-theme-surface">
-                       + Manual Input...
+                       {t('ai_config.manual_input')}
                    </option>
                  </select>
                )}
@@ -308,7 +312,7 @@ export const AIConfigPanel: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-theme-text mb-1">
-              Temperature ({temperature})
+              {t('ai_config.temperature')} ({temperature})
             </label>
             <input 
               type="range" 
@@ -320,19 +324,29 @@ export const AIConfigPanel: React.FC = () => {
               className="w-full h-2 bg-theme-border rounded-lg appearance-none cursor-pointer"
             />
             <div className="flex justify-between text-xs text-theme-subtext mt-1">
-              <span>Precise</span>
-              <span>Balanced</span>
-              <span>Creative</span>
+              <span>{t('ai_config.temp_precise')}</span>
+              <span>{t('ai_config.temp_balanced')}</span>
+              <span>{t('ai_config.temp_creative')}</span>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-theme-text mb-1">Max Tokens</label>
+            <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.max_tokens')}</label>
             <input 
               type="number" 
               value={maxTokens}
               onChange={(e) => setConfig({ maxTokens: parseInt(e.target.value) })}
               className="w-full px-4 py-2 rounded-lg border bg-theme-bg border-theme-border text-theme-text focus:ring-2 focus:ring-theme-accent outline-none"
+            />
+          </div>
+
+          <div className="col-span-1 md:col-span-2">
+            <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.system_prompt_label')}</label>
+            <textarea 
+              value={localSystemPrompt}
+              onChange={(e) => setLocalSystemPrompt(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border bg-theme-bg border-theme-border text-theme-text focus:ring-2 focus:ring-theme-accent outline-none h-32 resize-y text-sm font-mono"
+              placeholder={t('ai_config.enter_system_prompt')}
             />
           </div>
         </div>
@@ -343,7 +357,7 @@ export const AIConfigPanel: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
                 <Globe className="w-5 h-5 text-theme-accent" />
-                <h3 className="text-lg font-semibold text-theme-text">Web Search Capabilities</h3>
+                <h3 className="text-lg font-semibold text-theme-text">{t('ai_config.web_search_capabilities')}</h3>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input 
@@ -353,7 +367,7 @@ export const AIConfigPanel: React.FC = () => {
                 className="sr-only peer" 
               />
               <div className="w-11 h-6 bg-theme-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-accent"></div>
-              <span className="ms-3 text-sm font-medium text-theme-text">Enable Web Search</span>
+              <span className="ms-3 text-sm font-medium text-theme-text">{t('ai_config.enable_web_search')}</span>
             </label>
         </div>
 
@@ -361,7 +375,7 @@ export const AIConfigPanel: React.FC = () => {
             <div className="bg-theme-bg/50 p-4 rounded-lg border border-theme-border space-y-4">
                 {/* Search Provider Selection */}
                 <div>
-                    <label className="block text-sm font-medium text-theme-text mb-1">Search Engine</label>
+                    <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.search_engine')}</label>
                     <div className="flex items-center gap-2">
                         <Search className="w-4 h-4 text-theme-subtext" />
                         <select 
@@ -380,7 +394,7 @@ export const AIConfigPanel: React.FC = () => {
                 {searchProvider === 'google' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-theme-text mb-1">Google Custom Search API Key</label>
+                            <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.google_key_label')}</label>
                             <div className="relative">
                                 <input 
                                     type={showGoogleKey ? "text" : "password"} 
@@ -398,11 +412,11 @@ export const AIConfigPanel: React.FC = () => {
                                   </button>
                             </div>
                              <a href="https://developers.google.com/custom-search/v1/overview" target="_blank" rel="noreferrer" className="text-xs text-theme-accent hover:underline mt-1 inline-block">
-                                Get Google API Key
+                                {t('ai_config.get_google_key')}
                             </a>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-theme-text mb-1">Search Engine ID (CX)</label>
+                            <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.google_cx_label')}</label>
                             <input 
                                 type="text" 
                                 value={googleSearchCx}
@@ -411,34 +425,34 @@ export const AIConfigPanel: React.FC = () => {
                                 placeholder="0123456789..."
                             />
                             <a href="https://programmablesearchengine.google.com/controlpanel/all" target="_blank" rel="noreferrer" className="text-xs text-theme-accent hover:underline mt-1 inline-block">
-                                Get Search Engine ID
+                                {t('ai_config.get_google_cx')}
                             </a>
                         </div>
                     </div>
                 )}
 
-                {/* Bing Configuration */}
-                {searchProvider === 'bing' && (
+                {/* Serper Configuration */}
+                {searchProvider === 'serper' && (
                      <div>
-                        <label className="block text-sm font-medium text-theme-text mb-1">Bing Web Search API Key</label>
+                        <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.serper_key_label')}</label>
                         <div className="relative">
                             <input 
-                                type={showBingKey ? "text" : "password"} 
-                                value={localBingKey}
-                                onChange={(e) => setLocalBingKey(e.target.value)}
+                                type={showSerperKey ? "text" : "password"} 
+                                value={localSerperKey}
+                                onChange={(e) => setLocalSerperKey(e.target.value)}
                                 className="w-full px-4 py-2 pr-10 rounded-lg border bg-theme-bg border-theme-border text-theme-text focus:ring-2 focus:ring-theme-accent outline-none"
-                                placeholder="Bing API Key..."
+                                placeholder={t('ai_config.serper_key_placeholder')}
                             />
                              <button 
                                 type="button"
-                                onClick={() => setShowBingKey(!showBingKey)}
+                                onClick={() => setShowSerperKey(!showSerperKey)}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-subtext hover:text-theme-text"
                               >
-                                {showBingKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {showSerperKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                               </button>
                         </div>
-                         <a href="https://www.microsoft.com/en-us/bing/apis/bing-web-search-api" target="_blank" rel="noreferrer" className="text-xs text-theme-accent hover:underline mt-1 inline-block">
-                            Get Bing API Key (Azure)
+                         <a href="https://serper.dev/" target="_blank" rel="noreferrer" className="text-xs text-theme-accent hover:underline mt-1 inline-block">
+                            {t('ai_config.get_serper_key')}
                         </a>
                     </div>
                 )}
@@ -447,24 +461,24 @@ export const AIConfigPanel: React.FC = () => {
                 {searchProvider === 'yandex' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-theme-text mb-1">Yandex XML User</label>
+                            <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.yandex_user_label')}</label>
                             <input 
                                 type="text" 
                                 value={yandexSearchLogin}
                                 onChange={(e) => setConfig({ yandexSearchLogin: e.target.value })}
                                 className="w-full px-4 py-2 rounded-lg border bg-theme-bg border-theme-border text-theme-text focus:ring-2 focus:ring-theme-accent outline-none"
-                                placeholder="Yandex Login/User..."
+                                placeholder={t('ai_config.yandex_user_placeholder')}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-theme-text mb-1">Yandex XML API Key</label>
+                            <label className="block text-sm font-medium text-theme-text mb-1">{t('ai_config.yandex_key_label')}</label>
                             <div className="relative">
                                 <input 
                                     type={showYandexKey ? "text" : "password"} 
                                     value={localYandexKey}
                                     onChange={(e) => setLocalYandexKey(e.target.value)}
                                     className="w-full px-4 py-2 pr-10 rounded-lg border bg-theme-bg border-theme-border text-theme-text focus:ring-2 focus:ring-theme-accent outline-none"
-                                    placeholder="Yandex API Key..."
+                                    placeholder={t('ai_config.yandex_key_placeholder')}
                                 />
                                  <button 
                                     type="button"
@@ -475,7 +489,7 @@ export const AIConfigPanel: React.FC = () => {
                                   </button>
                             </div>
                              <a href="https://xml.yandex.com/" target="_blank" rel="noreferrer" className="text-xs text-theme-accent hover:underline mt-1 inline-block">
-                                Get Yandex XML Key
+                                {t('ai_config.get_yandex_key')}
                             </a>
                         </div>
                     </div>
@@ -486,7 +500,7 @@ export const AIConfigPanel: React.FC = () => {
                     <div className="text-sm text-theme-subtext bg-theme-surface p-3 rounded-lg border border-theme-border">
                         <p className="flex items-center gap-2">
                             <Info className="w-4 h-4 text-theme-accent" />
-                            DuckDuckGo search does not require an API key. It is free to use but may be slower or rate-limited.
+                            {t('ai_config.ddg_info')}
                         </p>
                     </div>
                 )}
@@ -507,7 +521,7 @@ export const AIConfigPanel: React.FC = () => {
                 )}
             >
                 <Activity className={clsx("w-4 h-4", isTesting && "animate-spin")} />
-                {isTesting ? 'Testing...' : 'Test Connection'}
+                {isTesting ? t('ai_config.testing_btn') : t('ai_config.test_connection_btn')}
             </button>
             
             {testResult.status && (
@@ -521,7 +535,7 @@ export const AIConfigPanel: React.FC = () => {
                     <span>
                         {testResult.status === 'success' 
                             ? `${testResult.latency}ms` 
-                            : 'Failed'}
+                            : t('ai_config.test_failed')}
                     </span>
                 </div>
             )}
@@ -532,7 +546,7 @@ export const AIConfigPanel: React.FC = () => {
             className="px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors bg-theme-accent text-theme-bg hover:bg-theme-accent-hover shadow-lg shadow-theme-accent/20 w-full md:w-auto justify-center"
         >
             <Save className="w-4 h-4" />
-            Save Configuration
+            {t('ai_config.save_configuration')}
         </button>
       </div>
       
@@ -551,7 +565,7 @@ export const AIConfigPanel: React.FC = () => {
             rel="noopener noreferrer" 
             className="text-xs text-theme-accent hover:underline"
         >
-            View API Documentation
+            {t('ai_config.view_api_docs')}
         </a>
       </div>
     </div>

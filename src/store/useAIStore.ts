@@ -8,7 +8,7 @@ const SECRET_KEY = import.meta.env.VITE_SECRET_KEY || 'media-tracker-ai-config-s
 
 
 export type AIProvider = 'moonshot' | 'openai' | 'deepseek' | 'qwen' | 'google' | 'mistral' | 'custom';
-export type SearchProvider = 'google' | 'bing' | 'duckduckgo' | 'yandex';
+export type SearchProvider = 'google' | 'serper' | 'duckduckgo' | 'yandex';
 
 interface AIConfigState {
   provider: AIProvider;
@@ -17,20 +17,22 @@ interface AIConfigState {
   baseUrl: string;
   temperature: number;
   maxTokens: number;
+  systemPrompt: string;
   // Search Configuration
   enableSearch: boolean;
   searchProvider: SearchProvider;
   googleSearchApiKey: string;
   googleSearchCx: string;
-  bingSearchApiKey: string;
+  serperApiKey: string;
   yandexSearchApiKey: string;
   yandexSearchLogin: string;
+  trendingPrompt: string;
   
   setProvider: (provider: AIProvider) => void;
-  setConfig: (config: Partial<Omit<AIConfigState, 'setProvider' | 'setConfig' | 'getDecryptedApiKey' | 'getDecryptedGoogleKey' | 'getDecryptedBingKey' | 'getDecryptedYandexKey'>>) => void;
+  setConfig: (config: Partial<Omit<AIConfigState, 'setProvider' | 'setConfig' | 'getDecryptedApiKey' | 'getDecryptedGoogleKey' | 'getDecryptedSerperKey' | 'getDecryptedYandexKey'>>) => void;
   getDecryptedApiKey: () => string;
   getDecryptedGoogleKey: () => string;
-  getDecryptedBingKey: () => string;
+  getDecryptedSerperKey: () => string;
   getDecryptedYandexKey: () => string;
 }
 
@@ -54,19 +56,33 @@ export const useAIStore = create<AIConfigState>()(
     (set, get) => ({
       provider: 'moonshot',
       apiKey: '', // Stores encrypted key
-      model: 'moonshot-v1-8k',
+      model: 'kimi-latest',
       baseUrl: 'https://api.moonshot.cn/v1',
-      temperature: 0.3,
+      temperature: 0.7,
       maxTokens: 2000,
-      
-      // Search Defaults
-      enableSearch: false,
+      systemPrompt: `You are a helpful media encyclopedia and curator. 
+When searching or recommending, you must return a VALID JSON array of objects.
+Do not wrap the JSON in markdown code blocks. Just return the raw JSON array.
+Each object must have the following fields:
+- title: string
+- directorOrAuthor: string
+- cast: string[] (max 5 main actors, empty for books if not applicable)
+- description: string (approx 150 words, covering theme and background)
+- releaseDate: string (YYYY-MM-DD preferred, or YYYY)
+- type: one of ["Book", "Movie", "TV Series", "Comic", "Short Drama", "Other"]
+- isOngoing: boolean
+- latestUpdateInfo: string (empty if completed)
+- rating: string (e.g. "8.5/10")
+
+Ensure data is accurate.`,
+    enableSearch: false,
       searchProvider: 'google',
       googleSearchApiKey: '',
       googleSearchCx: '',
-      bingSearchApiKey: '',
+      serperApiKey: '',
       yandexSearchApiKey: '',
       yandexSearchLogin: '',
+      trendingPrompt: '',
 
       setProvider: (provider) => {
         let defaultBaseUrl = '';
@@ -75,7 +91,7 @@ export const useAIStore = create<AIConfigState>()(
         switch (provider) {
           case 'moonshot':
             defaultBaseUrl = 'https://api.moonshot.cn/v1';
-            defaultModel = 'moonshot-v1-8k';
+            defaultModel = 'kimi-latest';
             break;
           case 'openai':
             defaultBaseUrl = 'https://api.openai.com/v1';
@@ -87,15 +103,15 @@ export const useAIStore = create<AIConfigState>()(
             break;
           case 'qwen':
             defaultBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
-            defaultModel = 'qwen-plus';
+            defaultModel = 'qwen-max';
             break;
           case 'google':
             defaultBaseUrl = 'https://generativelanguage.googleapis.com/v1beta/openai/';
-            defaultModel = 'gemini-1.5-flash';
+            defaultModel = 'gemini-2.5-flash';
             break;
           case 'mistral':
             defaultBaseUrl = 'https://api.mistral.ai/v1';
-            defaultModel = 'mistral-small-latest';
+            defaultModel = 'mistral-large-latest';
             break;
           case 'custom':
             defaultBaseUrl = '';
@@ -106,38 +122,40 @@ export const useAIStore = create<AIConfigState>()(
         set({ provider, baseUrl: defaultBaseUrl, model: defaultModel });
       },
       setConfig: (config) => {
-        const updates = { ...config };
-        // Encrypt API Key if it's being updated
-        if (updates.apiKey) {
-            updates.apiKey = encrypt(updates.apiKey);
-        }
-        // Encrypt Search Keys if updated
-        if (updates.googleSearchApiKey) {
-            updates.googleSearchApiKey = encrypt(updates.googleSearchApiKey);
-        }
-        if (updates.bingSearchApiKey) {
-            updates.bingSearchApiKey = encrypt(updates.bingSearchApiKey);
-        }
-        if (updates.yandexSearchApiKey) {
-            updates.yandexSearchApiKey = encrypt(updates.yandexSearchApiKey);
-        }
-        set(updates);
+        const state = get();
+        const updates: any = { ...config };
+        
+        // Encrypt keys if they are being updated
+        if (config.apiKey) updates.apiKey = encrypt(config.apiKey);
+        if (config.googleSearchApiKey) updates.googleSearchApiKey = encrypt(config.googleSearchApiKey);
+        if (config.serperApiKey) updates.serperApiKey = encrypt(config.serperApiKey);
+        if (config.yandexSearchApiKey) updates.yandexSearchApiKey = encrypt(config.yandexSearchApiKey);
+        
+        set((state) => ({ ...state, ...updates }));
       },
-      getDecryptedApiKey: () => {
-        return decrypt(get().apiKey);
-      },
-      getDecryptedGoogleKey: () => {
-        return decrypt(get().googleSearchApiKey);
-      },
-      getDecryptedBingKey: () => {
-        return decrypt(get().bingSearchApiKey);
-      },
-      getDecryptedYandexKey: () => {
-        return decrypt(get().yandexSearchApiKey);
-      }
+      getDecryptedApiKey: () => decrypt(get().apiKey),
+      getDecryptedGoogleKey: () => decrypt(get().googleSearchApiKey),
+      getDecryptedSerperKey: () => decrypt(get().serperApiKey),
+      getDecryptedYandexKey: () => decrypt(get().yandexSearchApiKey),
     }),
     {
       name: 'ai-config-storage',
+      partialize: (state) => ({ 
+        provider: state.provider,
+        apiKey: state.apiKey, 
+        model: state.model,
+        baseUrl: state.baseUrl,
+        temperature: state.temperature,
+        maxTokens: state.maxTokens,
+        systemPrompt: state.systemPrompt,
+        enableSearch: state.enableSearch,
+        searchProvider: state.searchProvider,
+        googleSearchApiKey: state.googleSearchApiKey,
+        googleSearchCx: state.googleSearchCx,
+        serperApiKey: state.serperApiKey,
+        yandexSearchApiKey: state.yandexSearchApiKey,
+        yandexSearchLogin: state.yandexSearchLogin
+      }),
     }
   )
 );

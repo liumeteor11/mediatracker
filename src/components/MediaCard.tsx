@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { useThemeStore } from '../store/useThemeStore';
 import { useCollectionStore } from '../store/useCollectionStore';
 import { EditMediaModal } from './EditMediaModal';
+import { useTranslation } from 'react-i18next';
 
 interface MediaCardProps {
   item: MediaItem;
@@ -32,6 +33,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.matchMedia('(max-width: 768px)').matches);
@@ -58,6 +60,10 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   useEffect(() => {
     setImgSrc(item.customPosterUrl || item.posterUrl || 'https://placehold.co/600x400/1a1a1a/FFF?text=No+Image');
   }, [item.customPosterUrl, item.posterUrl]);
+
+  const handleImageError = () => {
+      setImgSrc('https://placehold.co/600x400/1a1a1a/FFF?text=Image+Error');
+  };
 
   return (
     <>
@@ -98,7 +104,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                             setIsFlipped(!isFlipped);
                         }}
                         className="bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/10 text-white active:scale-95 transition-transform"
-                        aria-label="Flip Card"
+                        aria-label={t('media_card.flip_card')}
                     >
                         <Info className="w-4 h-4" />
                     </button>
@@ -108,7 +114,8 @@ export const MediaCard: React.FC<MediaCardProps> = ({
               <img
                 src={imgSrc}
                 alt={item.title}
-                onError={() => setImgSrc('https://placehold.co/600x400/1a1a1a/FFF?text=No+Image')}
+                onError={handleImageError}
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 loading="lazy"
               />
@@ -125,7 +132,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
               <div className="absolute bottom-0 left-0 right-0 p-4 transform transition-transform duration-300 group-hover:translate-y-[-10px]">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-theme-accent text-theme-bg rounded-sm">
-                    {item.type}
+                    {t('media_type.' + item.type)}
                   </span>
                   {item.rating && (
                     <div className="flex items-center gap-1 text-theme-accent">
@@ -190,7 +197,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                   onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
                   className="text-xs font-medium mb-3 hover:underline text-theme-accent"
                 >
-                  {isExpanded ? 'Show Less' : 'View More'}
+                  {isExpanded ? t('media_card.show_less') : t('media_card.view_more')}
                 </button>
               )}
 

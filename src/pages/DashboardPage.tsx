@@ -3,8 +3,9 @@ import { useCollectionStore } from '../store/useCollectionStore';
 import { useThemeStore } from '../store/useThemeStore';
 import { AIConfigPanel } from '../components/AIConfigPanel';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { CollectionCategory } from '../types/types';
+import { CollectionCategory, MediaType } from '../types/types';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 
 // Helper to get colors from CSS variables would be ideal, but for now we can use a map or just standard colors that work on both
 // or rely on the fact that we can pass CSS variables to some SVG props.
@@ -13,17 +14,33 @@ import clsx from 'clsx';
 export const DashboardPage: React.FC = () => {
   const { getStats, collection } = useCollectionStore();
   const { theme } = useThemeStore();
+  const { t } = useTranslation();
   const stats = getStats();
 
   const pieData = [
-    { name: 'Watched', value: stats.watched, color: '#22c55e' },
-    { name: 'To Watch', value: stats.toWatch, color: '#3b82f6' },
-    { name: 'Favorites', value: stats.favorites, color: '#ef4444' },
+    { name: t('dashboard.status_watched'), value: stats.watched, color: '#22c55e' },
+    { name: t('dashboard.to_watch'), value: stats.toWatch, color: '#3b82f6' },
+    { name: t('dashboard.status_favorites'), value: stats.favorites, color: '#ef4444' },
   ].filter(d => d.value > 0);
+
+  // Helper for localized type names
+  const getLocalizedType = (type: string) => {
+    switch (type) {
+      case MediaType.MOVIE: return t('search_page.filter_movies');
+      case MediaType.TV_SERIES: return t('search_page.filter_tv');
+      case MediaType.BOOK: return t('search_page.filter_books');
+      case MediaType.COMIC: return t('search_page.filter_comics');
+      case MediaType.SHORT_DRAMA: return t('search_page.filter_short_dramas');
+      case MediaType.MUSIC: return t('search_page.filter_music');
+      case MediaType.OTHER: return t('search_page.filter_other');
+      default: return type;
+    }
+  };
 
   // Calculate types distribution
   const typeData = Object.values(collection.reduce((acc, item) => {
-      acc[item.type] = acc[item.type] || { name: item.type, count: 0 };
+      const typeName = getLocalizedType(item.type);
+      acc[item.type] = acc[item.type] || { name: typeName, count: 0 };
       acc[item.type].count++;
       return acc;
   }, {} as Record<string, { name: string; count: number }>));
@@ -47,19 +64,19 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold mb-8 text-theme-accent">Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-8 text-theme-accent">{t('dashboard.title')}</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="p-6 rounded-xl shadow-sm border bg-theme-surface border-theme-border">
-            <h3 className="text-sm font-medium text-theme-subtext">Total Collection</h3>
+            <h3 className="text-sm font-medium text-theme-subtext">{t('dashboard.total_collection')}</h3>
             <p className="text-4xl font-bold mt-2 text-theme-text">{stats.total}</p>
         </div>
         <div className="p-6 rounded-xl shadow-sm border bg-theme-surface border-theme-border">
-            <h3 className="text-sm font-medium text-theme-subtext">Completed</h3>
+            <h3 className="text-sm font-medium text-theme-subtext">{t('dashboard.completed')}</h3>
             <p className="text-4xl font-bold text-green-600 mt-2">{stats.watched}</p>
         </div>
         <div className="p-6 rounded-xl shadow-sm border bg-theme-surface border-theme-border">
-            <h3 className="text-sm font-medium text-theme-subtext">To Watch</h3>
+            <h3 className="text-sm font-medium text-theme-subtext">{t('dashboard.to_watch')}</h3>
             <p className="text-4xl font-bold text-blue-600 mt-2">{stats.toWatch}</p>
         </div>
       </div>
@@ -72,7 +89,7 @@ export const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Status Distribution */}
         <div className="p-6 rounded-xl shadow-sm border h-[400px] bg-theme-surface border-theme-border">
-            <h3 className="text-lg font-bold mb-6 text-theme-text">Collection Status</h3>
+            <h3 className="text-lg font-bold mb-6 text-theme-text">{t('dashboard.collection_status')}</h3>
             {pieData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -103,14 +120,14 @@ export const DashboardPage: React.FC = () => {
                 </ResponsiveContainer>
             ) : (
                 <div className="h-full flex items-center justify-center text-theme-subtext">
-                    No data available
+                    {t('dashboard.no_data')}
                 </div>
             )}
         </div>
 
         {/* Type Distribution */}
         <div className="p-6 rounded-xl shadow-sm border h-[400px] bg-theme-surface border-theme-border">
-             <h3 className="text-lg font-bold mb-6 text-theme-text">Media Types</h3>
+             <h3 className="text-lg font-bold mb-6 text-theme-text">{t('dashboard.media_types')}</h3>
              {typeData.length > 0 ? (
                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={typeData}>
@@ -141,7 +158,7 @@ export const DashboardPage: React.FC = () => {
                  </ResponsiveContainer>
              ) : (
                 <div className="h-full flex items-center justify-center text-theme-subtext">
-                    No data available
+                    {t('dashboard.no_data')}
                 </div>
              )}
         </div>

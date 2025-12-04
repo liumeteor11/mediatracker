@@ -8,30 +8,14 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-const SYSTEM_PROMPT = `
-You are a helpful media encyclopedia and curator. 
-When searching or recommending, you must return a VALID JSON array of objects.
-Do not wrap the JSON in markdown code blocks. Just return the raw JSON array.
-Each object must have the following fields:
-- title: string
-- directorOrAuthor: string
-- cast: string[] (max 5 main actors, empty for books if not applicable)
-- description: string (approx 150 words, covering theme and background)
-- releaseDate: string (YYYY-MM-DD preferred, or YYYY)
-- type: one of ["Book", "Movie", "TV Series", "Comic", "Short Drama", "Other"]
-- isOngoing: boolean
-- latestUpdateInfo: string (empty if completed)
-- rating: string (e.g. "8.5/10")
 
-Ensure data is accurate.
-`;
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
       contextIsolation: true,
     },
@@ -108,32 +92,40 @@ ipcMain.handle('ai-chat', async (event, { messages, temperature = 0.3, apiKey: p
     }
   };
 
-  // Bing Search Function
-  const performBingSearch = async (query, config) => {
+  // Serper Search Function
+  const performSerperSearch = async (query, config) => {
     if (!config || !config.apiKey) {
-      return "Error: Bing Search configuration missing (API Key)";
+      return "Error: Serper Search configuration missing (API Key)";
     }
     try {
-      const url = `https://api.bing.microsoft.com/v7.0/search?q=${encodeURIComponent(query)}&count=5`;
-      const response = await fetch(url, {
-        headers: { 'Ocp-Apim-Subscription-Key': config.apiKey }
+      const response = await fetch('https://google.serper.dev/search', {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': config.apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ q: query })
       });
+
       if (!response.ok) {
-        return `Bing Search failed: ${response.statusText}`;
+        return `Serper Search failed: ${response.statusText}`;
       }
+
       const data = await response.json();
-      if (!data.webPages || !data.webPages.value || data.webPages.value.length === 0) {
-        return "No Bing results found.";
+      
+      if (!data.organic || data.organic.length === 0) {
+        return "No Serper results found.";
       }
-      return data.webPages.value.map(item => ({
-        title: item.name,
-        link: item.url,
+
+      return data.organic.slice(0, 5).map(item => ({
+        title: item.title,
+        link: item.link,
         snippet: item.snippet,
-        source: 'Bing',
-        image: item.openGraphImage?.contentUrl || null
+        source: 'Serper',
+        image: item.imageUrl || null
       }));
     } catch (error) {
-      return `Bing Search error: ${error.message}`;
+      return `Serper Search error: ${error.message}`;
     }
   };
 
@@ -198,20 +190,21 @@ ipcMain.handle('ai-chat', async (event, { messages, temperature = 0.3, apiKey: p
       const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
       const response = await fetch(url, {
         headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9'
         }
       });
       
       if (!response.ok) {
+        console.error(`DuckDuckGo Search failed: ${response.status} ${response.statusText}`);
         return `DuckDuckGo Search failed: ${response.statusText}`;
       }
       
       const html = await response.text();
       const results = [];
       
-      // Regex to find results in the HTML structure
-      // Structure: <div class="result ..."> ... <a class="result__a" href="...">Title</a> ... <a class="result__snippet" ...>Snippet</a> ... </div>
-      
+      // Improved Regex/Parsing logic
       // We'll split by "result__body" to isolate result blocks
       const blocks = html.split('class="result__body"');
       
@@ -236,11 +229,13 @@ ipcMain.handle('ai-chat', async (event, { messages, temperature = 0.3, apiKey: p
       }
 
       if (results.length === 0) {
+         console.warn("DuckDuckGo parsing found 0 results. HTML might have changed.");
          return "No DuckDuckGo results found (parsing failed or no results).";
       }
       return results;
 
     } catch (error) {
+      console.error("DuckDuckGo Search error:", error);
       return `DuckDuckGo Search error: ${error.message}`;
     }
   };
@@ -249,8 +244,8 @@ ipcMain.handle('ai-chat', async (event, { messages, temperature = 0.3, apiKey: p
       if (!config || !config.enabled) return "Search disabled";
       
       switch (config.provider) {
-          case 'bing':
-              return await performBingSearch(query, config);
+          case 'serper':
+              return await performSerperSearch(query, config);
           case 'yandex':
               return await performYandexSearch(query, config);
           case 'duckduckgo':
@@ -336,7 +331,7 @@ ipcMain.handle('ai-chat', async (event, { messages, temperature = 0.3, apiKey: p
                 messages: messages,
                 temperature: temperature
              });
-             return retry.choices[0].message.content;
+             return `[System Warning: The model '${model}' does not support web search. Responding without search.]\n\n` + retry.choices[0].message.content;
          } catch (retryError) {
              throw retryError;
          }

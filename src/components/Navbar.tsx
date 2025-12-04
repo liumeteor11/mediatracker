@@ -1,22 +1,32 @@
 import React, { useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Library, User, Menu, X, LogIn, Palette, ChevronDown } from 'lucide-react';
+import { Search, Library, User, Menu, X, LogIn, Palette, ChevronDown, Globe, Calendar } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useThemeStore, Theme } from '../store/useThemeStore';
+import { useTranslation } from 'react-i18next';
+import { getAIDate } from '../services/aiService';
 import clsx from 'clsx';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = React.useState(false);
   const [isThemeOpen, setIsThemeOpen] = React.useState(false);
+  const [isLangOpen, setIsLangOpen] = React.useState(false);
   const themeDropdownRef = useRef<HTMLDivElement>(null);
+  const langDropdownRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
+  const [aiDate, setAiDate] = React.useState<string>('');
+
+  useEffect(() => {
+    getAIDate().then(setAiDate);
+  }, []);
 
   const navLinks = [
-    { path: '/', label: 'Search', icon: Search },
-    { path: '/collection', label: 'Collection', icon: Library },
-    { path: '/dashboard', label: 'Dashboard', icon: User },
+    { path: '/', label: t('nav.search'), icon: Search },
+    { path: '/collection', label: t('nav.collection'), icon: Library },
+    { path: '/dashboard', label: t('nav.dashboard'), icon: User },
   ];
 
   const themes: { id: Theme; name: string }[] = [
@@ -26,15 +36,28 @@ export const Navbar: React.FC = () => {
     { id: 'gradient', name: 'Gradient' },
   ];
 
+  const languages = [
+    { code: 'en', name: 'English' },
+    { code: 'zh', name: '中文' },
+  ];
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target as Node)) {
         setIsThemeOpen(false);
       }
+      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
+        setIsLangOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    setIsLangOpen(false);
+  };
 
   return (
     <nav className="backdrop-blur-md border-b sticky top-0 z-50 transition-colors duration-300 bg-theme-surface/90 border-theme-border text-theme-text">
@@ -64,6 +87,45 @@ export const Navbar: React.FC = () => {
                   {label}
                 </Link>
               ))}
+
+              {/* AI Date Display */}
+              {aiDate && (
+                <div className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium text-theme-subtext bg-theme-surface/50 border border-theme-border/50 max-w-[300px] truncate" title={aiDate}>
+                  <Calendar className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">{aiDate}</span>
+                </div>
+              )}
+
+              {/* Language Dropdown */}
+              <div className="relative" ref={langDropdownRef}>
+                <button
+                  onClick={() => setIsLangOpen(!isLangOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors text-theme-subtext hover:text-theme-text hover:bg-theme-surface/50"
+                >
+                  <Globe className="w-4 h-4" />
+                  <span className="capitalize">{languages.find(l => l.code === i18n.language.split('-')[0])?.name || t('common.language')}</span>
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+                
+                {isLangOpen && (
+                  <div className="absolute right-0 mt-2 w-32 rounded-md shadow-lg py-1 bg-theme-surface border border-theme-border ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    {languages.map((l) => (
+                      <button
+                        key={l.code}
+                        onClick={() => changeLanguage(l.code)}
+                        className={clsx(
+                          "w-full text-left px-4 py-2 text-sm transition-colors",
+                          i18n.language.startsWith(l.code)
+                            ? "bg-theme-accent text-theme-bg"
+                            : "text-theme-text hover:bg-theme-bg"
+                        )}
+                      >
+                        {l.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               
               {/* Theme Dropdown */}
               <div className="relative" ref={themeDropdownRef}>
@@ -72,7 +134,7 @@ export const Navbar: React.FC = () => {
                   className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors text-theme-subtext hover:text-theme-text hover:bg-theme-surface/50"
                 >
                   <Palette className="w-4 h-4" />
-                  <span className="capitalize">{themes.find(t => t.id === theme)?.name || 'Theme'}</span>
+                  <span className="capitalize">{themes.find(t => t.id === theme)?.name || t('common.theme')}</span>
                   <ChevronDown className="w-3 h-3" />
                 </button>
                 
@@ -104,7 +166,7 @@ export const Navbar: React.FC = () => {
                   onClick={logout}
                   className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors"
                 >
-                  Sign Out
+                  {t('nav.sign_out')}
                 </button>
               ) : (
                 <Link
@@ -112,7 +174,7 @@ export const Navbar: React.FC = () => {
                   className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all shadow-sm bg-theme-accent text-theme-bg hover:bg-theme-accent-hover"
                 >
                   <LogIn className="w-4 h-4" />
-                  Sign In
+                  {t('nav.sign_in')}
                 </Link>
               )}
             </div>
@@ -150,7 +212,7 @@ export const Navbar: React.FC = () => {
               ))}
               
               <div className="px-3 py-2">
-                <p className="text-xs font-semibold text-theme-subtext uppercase tracking-wider mb-2">Select Theme</p>
+                <p className="text-xs font-semibold text-theme-subtext uppercase tracking-wider mb-2">{t('common.select_theme')}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {themes.map((t) => (
                     <button
@@ -177,7 +239,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => { logout(); setIsOpen(false); }}
                   className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-red-500 hover:bg-red-500/10"
                 >
-                  Sign Out
+                  {t('nav.sign_out')}
                 </button>
               ) : (
                 <Link
@@ -186,7 +248,7 @@ export const Navbar: React.FC = () => {
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium bg-theme-accent text-theme-bg hover:bg-theme-accent-hover"
                 >
                   <LogIn className="w-4 h-4" />
-                  Sign In
+                  {t('nav.sign_in')}
                 </Link>
               )}
           </div>

@@ -1,13 +1,13 @@
 import React, { useState, useCallback, useRef } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
-import Cropper from 'react-easy-crop';
-import { Point, Area } from 'react-easy-crop/types';
+import Cropper, { Point, Area } from 'react-easy-crop';
 import { MediaItem } from '../types/types';
 import { X, Upload, Save, Trash2, RotateCcw } from 'lucide-react';
 import { useCollectionStore } from '../store/useCollectionStore';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 interface EditMediaModalProps {
   item: MediaItem;
@@ -16,6 +16,7 @@ interface EditMediaModalProps {
 }
 
 export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, onDelete }) => {
+  const { t } = useTranslation();
   const { updateItem } = useCollectionStore();
   const [activeTab, setActiveTab] = useState<'review' | 'cover'>('review');
   const [reviewContent, setReviewContent] = useState(item.userReview || '');
@@ -109,19 +110,19 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
 
       updateItem(item.id, updates);
       if (!silent) {
-        toast.success('Changes saved successfully!');
+        toast.success(t('edit_modal.save_success'));
         onClose();
       }
     } catch (error) {
       console.error('Save error:', error);
-      if (!silent) toast.error('Failed to save changes.');
+      if (!silent) toast.error(t('edit_modal.save_error'));
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this card? This action cannot be undone.')) {
+    if (window.confirm(t('edit_modal.delete_confirm'))) {
       onDelete();
       onClose();
     }
@@ -133,7 +134,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-theme-border bg-theme-bg">
           <h2 className="text-xl font-bold text-theme-accent">
-            Edit: {item.title}
+            {t('edit_modal.title', { title: item.title })}
           </h2>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-theme-surface transition-colors">
             <X className="w-6 h-6 text-theme-subtext" />
@@ -153,7 +154,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
                   : "text-theme-subtext hover:bg-theme-bg"
               )}
             >
-              Review & Notes
+              {t('edit_modal.tab_review')}
             </button>
             <button
               onClick={() => setActiveTab('cover')}
@@ -164,7 +165,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
                   : "text-theme-subtext hover:bg-theme-bg"
               )}
             >
-              Cover Image
+              {t('edit_modal.tab_cover')}
             </button>
             
             <div className="flex-1" />
@@ -174,7 +175,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
               className="w-auto md:w-full text-left px-4 py-2 rounded-lg font-medium text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2 whitespace-nowrap"
             >
               <Trash2 className="w-4 h-4" />
-              Delete Card
+              {t('edit_modal.delete_card')}
             </button>
           </div>
 
@@ -208,7 +209,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
                     className="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors bg-theme-surface hover:bg-theme-bg text-theme-text border border-theme-border"
                   >
                     <Upload className="w-4 h-4" />
-                    Select Image
+                    {t('edit_modal.select_image')}
                   </button>
                   <input
                     type="file"
@@ -223,7 +224,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
                       className="px-4 py-2 rounded-lg flex items-center gap-2 text-theme-subtext hover:bg-theme-surface transition-colors"
                     >
                       <RotateCcw className="w-4 h-4" />
-                      Reset
+                      {t('edit_modal.reset')}
                     </button>
                   )}
                 </div>
@@ -242,16 +243,16 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-theme-subtext flex-col gap-2">
                       <div className="w-48 h-72 border-2 border-dashed border-theme-border rounded-lg flex items-center justify-center">
-                        No Image Selected
+                        {t('edit_modal.no_image_selected')}
                       </div>
-                      <p>Upload an image to crop and set as cover</p>
+                      <p>{t('edit_modal.upload_instruction')}</p>
                     </div>
                   )}
                 </div>
                 
                 {imageSrc && (
                    <div className="flex items-center gap-2 px-4">
-                      <span className="text-sm text-theme-text">Zoom</span>
+                      <span className="text-sm text-theme-text">{t('edit_modal.zoom')}</span>
                       <input
                         type="range"
                         value={zoom}
@@ -275,7 +276,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
             onClick={onClose}
             className="px-4 py-2 rounded-lg font-medium transition-colors text-theme-subtext hover:text-theme-text"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={() => handleSave(false)}
@@ -287,7 +288,7 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
             )}
           >
             <Save className="w-4 h-4" />
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? t('common.saving') : t('edit_modal.save_changes')}
           </button>
         </div>
       </div>

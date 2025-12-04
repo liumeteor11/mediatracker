@@ -11,10 +11,21 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
         proxy: {
           '/api/moonshot': {
-            target: 'https://api.moonshot.cn/v1',
+            target: 'https://api.moonshot.cn',
             changeOrigin: true,
             secure: false,
             rewrite: (path) => path.replace(/^\/api\/moonshot/, ''),
+            configure: (proxy, _options) => {
+              proxy.on('error', (err, _req, _res) => {
+                console.log('proxy error', err);
+              });
+              proxy.on('proxyReq', (proxyReq, req, _res) => {
+                console.log('Sending Request to the Target:', req.method, req.url);
+              });
+              proxy.on('proxyRes', (proxyRes, req, _res) => {
+                console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+              });
+            },
           },
           '/api/ddg': {
             target: 'https://html.duckduckgo.com',
@@ -24,6 +35,10 @@ export default defineConfig(({ mode }) => {
             configure: (proxy, _options) => {
               proxy.on('error', (err, _req, _res) => {
                 console.log('proxy error', err);
+              });
+              proxy.on('proxyReq', (proxyReq, req, _res) => {
+                proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+                proxyReq.setHeader('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8');
               });
             },
           },
