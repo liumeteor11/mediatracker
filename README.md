@@ -2,7 +2,7 @@
 
 [English](README.md) | [中文文档](README_zh-CN.md)
 
-An intelligent media tracking application powered by AI (Moonshot, OpenAI, DeepSeek, etc.). Search for books, movies, and shows, and organize them into collections with AI-driven recommendations and insights.
+An intelligent media tracking application powered by AI (Moonshot, OpenAI, DeepSeek, etc.). Search for books, movies, and shows, and organize them into collections with AI-driven recommendations and insights.This solves the problem that most platforms can only be used to track TV series or movies, and can also be used to track other types of works such as comics and novels.
 
 ## Features
 
@@ -11,7 +11,11 @@ An intelligent media tracking application powered by AI (Moonshot, OpenAI, DeepS
 - **Privacy Focused**: Your API keys are encrypted and stored locally.
 - **Multi-Provider Support**: Works with Moonshot AI (Kimi), OpenAI, DeepSeek, Qwen, Google Gemini, Mistral, and custom endpoints.
 - **Dashboard**: Visual statistics of your media consumption.
+- **Import/Export**: Easily backup and restore your collection with JSON import/export support.
+- **Enhanced Editing**: Split-view markdown editor for writing reviews and notes.
 - **Local Web App**: Runs locally on your machine for maximum privacy and control.
+
+![collection](collection.png)
 
 ## Prerequisites
 
@@ -51,7 +55,7 @@ If you prefer to run it manually from the command line:
 
 Upon first launch, go to the **Settings** panel (gear icon) to configure your AI provider:
 
-- **Moonshot AI (Kimi)**: Recommended for Chinese content.
+- **Moonshot AI (Kimi)**: Recommended.
 - **OpenAI / DeepSeek**: General purpose.
 - **Search Configuration**: Enable Google or Serper search for real-time information retrieval.
 

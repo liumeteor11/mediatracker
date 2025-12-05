@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useCollectionStore } from '../store/useCollectionStore';
 import { MediaCard } from '../components/MediaCard';
 import { CollectionCategory, MediaItem } from '../types/types';
-import { Filter, Search as SearchIcon, X } from 'lucide-react';
+import { Filter, Search as SearchIcon, X, Download, Upload, MoreHorizontal } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -10,10 +10,13 @@ import { useTranslation } from 'react-i18next';
 
 export const CollectionPage: React.FC = () => {
   const { t } = useTranslation();
-  const { collection, moveCategory } = useCollectionStore();
+  const { collection, moveCategory, importCollection } = useCollectionStore();
   const [filter, setFilter] = useState<CollectionCategory | 'All'>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const menuRef = React.useRef<HTMLDivElement>(null);
 
   const getCategoryLabel = (cat: string) => {
     switch (cat) {
@@ -27,10 +30,24 @@ export const CollectionPage: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelectedId(null);
+      if (e.key === 'Escape') {
+        setSelectedId(null);
+        setShowMenu(false);
+      }
     };
+    
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const filteredCollection = collection.filter(item => {
@@ -42,6 +59,61 @@ export const CollectionPage: React.FC = () => {
   const handleMove = (item: MediaItem, category: CollectionCategory) => {
     moveCategory(item.id, category);
     toast.success(t('collection.moved_toast', { title: item.title, category: getCategoryLabel(category) }));
+  };
+
+  const handleExport = () => {
+    if (collection.length === 0) {
+      toast.info(t('collection.export_empty'));
+      return;
+    }
+    
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collection, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `media-collection-${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    toast.success(t('collection.export_success'));
+    setShowMenu(false);
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = event.target?.result as string;
+        const items = JSON.parse(json);
+        
+        if (!Array.isArray(items)) {
+          throw new Error("Invalid format");
+        }
+
+        // Basic validation
+        const validItems = items.filter((item: any) => item.id && item.title && item.type);
+        
+        if (validItems.length === 0) {
+           toast.error(t('collection.import_invalid'));
+           return;
+        }
+
+        importCollection(validItems);
+        toast.success(t('collection.import_success', { count: validItems.length }));
+      } catch (error) {
+        console.error('Import error:', error);
+        toast.error(t('collection.import_error'));
+      } finally {
+        // Reset input
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+        setShowMenu(false);
+      }
+    };
+    reader.readAsText(file);
   };
 
   return (
@@ -79,6 +151,43 @@ export const CollectionPage: React.FC = () => {
                         {getCategoryLabel(cat)}
                     </button>
                 ))}
+            </div>
+            
+            <div className="flex gap-2 items-center border-l border-theme-border pl-4 relative" ref={menuRef}>
+               <button
+                 onClick={() => setShowMenu(!showMenu)}
+                 className="p-2 rounded-lg bg-theme-surface border border-theme-border text-theme-subtext hover:text-theme-accent hover:border-theme-accent transition-colors"
+                 title={t('collection.import_export_tooltip')}
+               >
+                 <MoreHorizontal className="w-5 h-5" />
+               </button>
+
+               {showMenu && (
+                 <div className="absolute right-0 top-full mt-2 w-48 bg-theme-surface border border-theme-border rounded-lg shadow-lg z-50 overflow-hidden">
+                   <button
+                     onClick={handleExport}
+                     className="w-full text-left px-4 py-2 hover:bg-theme-bg transition-colors flex items-center gap-2 text-theme-text"
+                   >
+                     <Download className="w-4 h-4" />
+                     {t('collection.export_tooltip')}
+                   </button>
+                   <button
+                     onClick={() => fileInputRef.current?.click()}
+                     className="w-full text-left px-4 py-2 hover:bg-theme-bg transition-colors flex items-center gap-2 text-theme-text"
+                   >
+                     <Upload className="w-4 h-4" />
+                     {t('collection.import_tooltip')}
+                   </button>
+                 </div>
+               )}
+
+               <input
+                 type="file"
+                 ref={fileInputRef}
+                 onChange={handleImport}
+                 accept=".json"
+                 className="hidden"
+               />
             </div>
         </div>
       </div>

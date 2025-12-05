@@ -15,6 +15,43 @@ declare global {
   }
 }
 
+// Simple Semaphore to limit concurrent API calls
+class Semaphore {
+    private max: number;
+    private counter: number;
+    private waiting: { resolve: () => void, reject: (err: any) => void }[];
+
+    constructor(max: number) {
+        this.max = max;
+        this.counter = 0;
+        this.waiting = [];
+    }
+
+    acquire() {
+        if (this.counter < this.max) {
+            this.counter++;
+            return Promise.resolve();
+        } else {
+            return new Promise<void>((resolve, reject) => {
+                this.waiting.push({ resolve, reject });
+            });
+        }
+    }
+
+    release() {
+        this.counter--;
+        if (this.waiting.length > 0) {
+            this.counter++;
+            const { resolve } = this.waiting.shift()!;
+            resolve();
+        }
+    }
+}
+
+// Limit concurrent requests to avoid rate limits (e.g., 429 Too Many Requests)
+// Moonshot API has a concurrency limit. Using 2 balances speed and safety.
+const apiLimiter = new Semaphore(2);
+
 const OMDB_API_KEY = import.meta.env.VITE_OMDB_API_KEY;
 
 // A curated list of placeholders to serve as "Posters" when real ones aren't found
@@ -237,34 +274,38 @@ const callAI = async (messages: any[], temperature: number = 0.7, options: { for
 
         while (turnCount < MAX_TURNS) {
             let completion;
-            try {
-                // Standard OpenAI SDK call for ALL providers (including Moonshot)
-                // Since we are using standard 'web_search' tool, we don't need the special fetch hack anymore.
-                completion = await client.chat.completions.create({
-                    model: model || (provider === 'moonshot' ? "kimi-latest" : "gpt-3.5-turbo"),
-                    messages: currentMessages,
-                    temperature: temperature,
-                    tools: tools.length > 0 ? tools : undefined,
-                    tool_choice: tools.length > 0 ? "auto" : undefined,
-                });
-            } catch (apiError: any) {
-                console.error("AI Chat API failed", apiError);
-                // Retry once if it's a 429
-                if (apiError.status === 429) {
-                    console.warn("Rate limit hit, waiting 2s and retrying...");
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                     try {
-                        completion = await client.chat.completions.create({
+            
+            // Retry logic with Semaphore and Exponential Backoff
+            const MAX_RETRIES = 3;
+            let attempt = 0;
+
+            while (attempt < MAX_RETRIES) {
+                try {
+                    await apiLimiter.acquire();
+                    try {
+                         completion = await client.chat.completions.create({
                             model: model || (provider === 'moonshot' ? "kimi-latest" : "gpt-3.5-turbo"),
                             messages: currentMessages,
                             temperature: temperature,
                             tools: tools.length > 0 ? tools : undefined,
                             tool_choice: tools.length > 0 ? "auto" : undefined,
                         });
-                     } catch (retryError) {
-                         throw retryError;
-                     }
-                } else {
+                    } finally {
+                        apiLimiter.release();
+                    }
+                    break; // Success
+                } catch (apiError: any) {
+                    console.error(`AI Chat API failed (Attempt ${attempt + 1}/${MAX_RETRIES})`, apiError);
+                    
+                    if (apiError.status === 429) {
+                        attempt++;
+                        if (attempt < MAX_RETRIES) {
+                            const delay = 2000 * Math.pow(2, attempt - 1); // 2s, 4s, ...
+                            console.warn(`Rate limit hit, waiting ${delay}ms...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            continue;
+                        }
+                    }
                     throw apiError;
                 }
             }
@@ -327,16 +368,6 @@ const callAI = async (messages: any[], temperature: number = 0.7, options: { for
         console.error("Direct AI Chat failed:", e);
         return "";
     }
-};
-
-export const translateToEnglish = async (text: string): Promise<string> => {
-  if (!text || !text.trim()) return "";
-  const messages = [
-    { role: "system", content: "You are a translator. Translate the following text to English. Return only the translated text, nothing else. If the text is already in English, return it as is." },
-    { role: "user", content: text }
-  ];
-  // Use a low temperature for deterministic translation
-  return await callAI(messages, 0.1);
 };
 
 export const searchMedia = async (query: string, type?: MediaType | 'All'): Promise<MediaItem[]> => {

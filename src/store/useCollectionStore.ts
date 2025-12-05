@@ -9,6 +9,7 @@ interface CollectionState {
   removeFromCollection: (id: string) => void;
   updateItem: (id: string, updates: Partial<MediaItem>) => void;
   moveCategory: (id: string, category: CollectionCategory) => void;
+  importCollection: (items: MediaItem[]) => void;
   getStats: () => { total: number; watched: number; toWatch: number; favorites: number };
 }
 
@@ -16,6 +17,16 @@ export const useCollectionStore = create<CollectionState>()(
   persist(
     (set, get) => ({
       collection: [],
+      importCollection: (items) => set((state) => {
+        // Merge strategy: Add new items, update existing ones if ID matches, otherwise keep existing
+        // Or simple replacement? User said "Import... recognize as corresponding works". 
+        // Let's do a smart merge: filter out incoming items that already exist (by ID), then append the rest.
+        // Actually, if I import a backup, I might want to restore the state.
+        // Let's just append unique items based on ID to avoid duplicates.
+        const existingIds = new Set(state.collection.map(i => i.id));
+        const newItems = items.filter(i => !existingIds.has(i.id));
+        return { collection: [...newItems, ...state.collection] };
+      }),
       addToCollection: (item, category) => {
         set((state) => {
             const exists = state.collection.find(c => c.title === item.title && c.type === item.type);

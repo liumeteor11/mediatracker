@@ -67,7 +67,6 @@ export default defineConfig(({ mode }) => {
               'vendor-react': ['react', 'react-dom', 'react-router-dom'],
               'vendor-ui': ['framer-motion', 'lucide-react', 'clsx', 'tailwind-merge'],
               'vendor-charts': ['recharts'],
-              'vendor-editor': ['react-quill-new'],
               'vendor-utils': ['date-fns', 'uuid', 'zod', 'zustand', 'crypto-js'],
               'vendor-openai': ['openai'],
             }

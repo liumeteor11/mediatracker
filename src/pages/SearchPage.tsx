@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Loader2, TrendingUp, AlertCircle, RefreshCw, Edit, X, Save, RotateCcw } from 'lucide-react';
-import { searchMedia, getTrendingMedia, translateToEnglish } from '../services/aiService';
+import { searchMedia, getTrendingMedia } from '../services/aiService';
 import { MediaItem, CollectionCategory, MediaType } from '../types/types';
 import { MediaCard } from '../components/MediaCard';
 import { useCollectionStore } from '../store/useCollectionStore';
@@ -139,11 +139,7 @@ export const SearchPage: React.FC = () => {
       if (trendingPrompt && trendingPrompt.trim()) {
           setTempPrompt(trendingPrompt);
       } else {
-          const isChinese = i18n.language.startsWith('zh');
-          const defaultPrompt = isChinese 
-            ? `请使用联网搜索工具查找并推荐4部最近2个月内更新或上映的热门电影、电视剧或动漫。重点关注高热度/高人气的作品。确保结果严格限定在最近60天内。`
-            : `Please use the web search tool to find and recommend 4 currently trending movies, TV series, or dramas that have been updated or released within the last 2 months. Focus on the highest popularity/heat. Ensure the results are strictly from the recent 60 days.`;
-          setTempPrompt(defaultPrompt);
+          setTempPrompt(t('search_page.default_prompt'));
       }
       setIsPromptModalOpen(true);
   };
@@ -151,22 +147,7 @@ export const SearchPage: React.FC = () => {
   const savePrompt = async () => {
       let finalPrompt = tempPrompt;
       
-      if (finalPrompt && finalPrompt.trim()) {
-          const toastId = toast.loading(t('search_page.translating') || "Translating prompt...");
-          try {
-              const translated = await translateToEnglish(finalPrompt);
-              if (translated && translated.trim()) {
-                  finalPrompt = translated;
-                  toast.update(toastId, { render: t('search_page.translation_complete') || "Translation complete", type: "success", isLoading: false, autoClose: 2000 });
-              } else {
-                  toast.update(toastId, { render: t('search_page.translation_empty') || "Translation returned empty, using original", type: "warning", isLoading: false, autoClose: 2000 });
-              }
-          } catch (e) {
-              console.error("Translation error", e);
-              toast.update(toastId, { render: t('search_page.translation_failed') || "Translation failed, using original", type: "error", isLoading: false, autoClose: 2000 });
-          }
-      }
-
+      // Removed translation logic as requested
       setConfig({ trendingPrompt: finalPrompt });
       setIsPromptModalOpen(false);
       toast.success(t('common.save_success') || "Saved");
@@ -183,11 +164,7 @@ export const SearchPage: React.FC = () => {
       // Let's set it to the default text, but if they save, we should maybe save ""?
       // Actually, saving the default text explicitly is fine too.
       // But to be cleaner, let's just set it to the default text.
-      const isChinese = i18n.language.startsWith('zh');
-      const defaultPrompt = isChinese 
-        ? `请使用联网搜索工具查找并推荐4部最近2个月内更新或上映的热门电影、电视剧或动漫。重点关注高热度/高人气的作品。确保结果严格限定在最近60天内。`
-        : `Please use the web search tool to find and recommend 4 currently trending movies, TV series, or dramas that have been updated or released within the last 2 months. Focus on the highest popularity/heat. Ensure the results are strictly from the recent 60 days.`;
-      setTempPrompt(defaultPrompt);
+      setTempPrompt(t('search_page.default_prompt'));
   };
 
   return (

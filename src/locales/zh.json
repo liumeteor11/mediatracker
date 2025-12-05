@@ -9,7 +9,8 @@
     "saving": "保存中...",
     "error": "错误",
     "select_theme": "选择主题",
-    "theme": "主题"
+    "theme": "主题",
+    "save_success": "保存成功"
   },
   "nav": {
     "dashboard": "仪表盘",
@@ -125,8 +126,9 @@
     "refreshing": "刷新中...",
     "refresh_tooltip": "刷新热门内容 (每周更新)",
     "trending_updated": "热门内容已更新！",
-    "trending_refresh_failed": "刷新热门媒体失败。",
-    "trending_load_failed": "加载热门媒体失败。",
+    "trending_refresh_failed": "刷新热门内容失败",
+    "trending_load_failed": "加载热门内容失败",
+    "default_prompt": "请使用联网搜索工具查找并推荐4部最近2个月内更新或上映的热门电影、电视剧或动漫。重点关注高热度/高人气的作品。确保结果严格限定在最近60天内。",
     "no_results_found": "未找到结果。请尝试不同的查询。",
     "search_error": "搜索时发生错误。请检查您的 API 密钥。",
     "added_to_collection": "已将 \"{{title}}\" 添加到 {{category}}",
@@ -155,7 +157,15 @@
     "empty_title": "你的收藏为空",
     "empty_text": "开始搜索以添加电影、书籍等。",
     "no_matches": "没有符合筛选的项目。",
-    "moved_toast": "已将 \"{{title}}\" 移动到 {{category}}"
+    "moved_toast": "已将 \"{{title}}\" 移动到 {{category}}",
+    "export_empty": "没有可导出的项目",
+    "export_success": "收藏导出成功",
+    "import_invalid": "文件中未找到有效的媒体项目",
+    "import_success": "成功导入 {{count}} 个项目",
+    "import_error": "导入收藏失败",
+    "export_tooltip": "导出收藏",
+    "import_tooltip": "导入收藏",
+    "import_export_tooltip": "导入/导出收藏"
   },
   "login": {
     "welcome": "欢迎回来",
@@ -176,7 +186,21 @@
   "media_card": {
     "show_less": "收起",
     "view_more": "查看更多",
-    "flip_card": "翻转卡片"
+    "flip_card": "翻转卡片",
+    "edit": "编辑",
+    "delete": "删除",
+    "ongoing": "连载中",
+    "tracking": "追踪",
+    "toggle_updates": "切换更新提醒",
+    "latest": "最新:",
+    "unknown": "未知",
+    "my_progress": "我的进度",
+    "action_like": "喜欢",
+    "action_save": "保存",
+    "action_done": "已看",
+    "action_favorite_title": "收藏",
+    "action_towatch_title": "想看",
+    "action_watched_title": "看过"
   },
   "media_type": {
     "Movie": "电影",
@@ -200,6 +224,19 @@
     "save_changes": "保存更改",
     "save_success": "更改已保存！",
     "save_error": "保存更改失败。",
-    "delete_confirm": "确定要删除这张卡片吗？此操作无法撤销。"
+    "delete_confirm": "确定要删除这张卡片吗？此操作无法撤销。",
+    "bold_title": "粗体 (Ctrl+B)",
+    "italic_title": "斜体 (Ctrl+I)",
+    "link_title": "链接 (Ctrl+K)",
+    "list_title": "列表",
+    "split_view_title": "分栏视图",
+    "split": "分栏",
+    "preview_title": "预览",
+    "preview": "预览",
+    "edit": "编辑",
+    "no_content": "*暂无内容*",
+    "markdown_supported": "支持 Markdown",
+    "chars": "字符",
+    "markdown_placeholder": "在此输入您的评论 (支持 Markdown)..."
   }
 }

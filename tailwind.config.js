@@ -53,8 +53,75 @@ export default {
       backgroundImage: {
         'curtain-gradient': 'linear-gradient(to right, #000000 0%, #1a1a1a 50%, #000000 100%)',
         'gold-gradient': 'linear-gradient(45deg, #FFD700, #FFBF00)',
-      }
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: '100%',
+            color: 'var(--text-primary)',
+            '[class~="lead"]': {
+              color: 'var(--text-secondary)',
+            },
+            a: {
+              color: 'var(--accent-primary)',
+              '&:hover': {
+                color: 'var(--accent-secondary)',
+              },
+            },
+            strong: {
+              color: 'var(--text-primary)',
+            },
+            'ol > li::marker': {
+              color: 'var(--text-secondary)',
+            },
+            'ul > li::marker': {
+              color: 'var(--text-secondary)',
+            },
+            hr: {
+              borderColor: 'var(--border-color)',
+            },
+            blockquote: {
+              color: 'var(--text-secondary)',
+              borderLeftColor: 'var(--border-color)',
+            },
+            h1: {
+              color: 'var(--text-primary)',
+            },
+            h2: {
+              color: 'var(--text-primary)',
+            },
+            h3: {
+              color: 'var(--text-primary)',
+            },
+            h4: {
+              color: 'var(--text-primary)',
+            },
+            'figure figcaption': {
+              color: 'var(--text-secondary)',
+            },
+            code: {
+              color: 'var(--text-primary)',
+            },
+            'a code': {
+              color: 'var(--accent-primary)',
+            },
+            pre: {
+              color: 'var(--text-primary)',
+              backgroundColor: 'var(--bg-secondary)',
+            },
+            thead: {
+              color: 'var(--text-primary)',
+              borderBottomColor: 'var(--border-color)',
+            },
+            'tbody tr': {
+              borderBottomColor: 'var(--border-color)',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 }

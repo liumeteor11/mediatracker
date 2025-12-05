@@ -1,13 +1,12 @@
-import React, { useState, useCallback, useRef } from 'react';
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Cropper, { Point, Area } from 'react-easy-crop';
 import { MediaItem } from '../types/types';
-import { X, Upload, Save, Trash2, RotateCcw } from 'lucide-react';
+import { X, Upload, Save, Trash2, RotateCcw, FileText, Image as ImageIcon, Bold, Italic, Link as LinkIcon, List, Eye, EyeOff, Columns } from 'lucide-react';
 import { useCollectionStore } from '../store/useCollectionStore';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
 
 interface EditMediaModalProps {
   item: MediaItem;
@@ -15,12 +14,38 @@ interface EditMediaModalProps {
   onDelete: () => void;
 }
 
+// Helper function to clean initial HTML content from ReactQuill
+const cleanInitialContent = (content: string | undefined): string => {
+  if (!content) return '';
+  // Simple check if it looks like HTML (starts with <p, <div, etc or contains HTML entities)
+  if (content.trim().startsWith('<') || content.includes('&lt;')) {
+    return content
+      .replace(/<p>/g, '')
+      .replace(/<\/p>/g, '\n\n')
+      .replace(/<br\s*\/?>/g, '\n')
+      .replace(/<strong>/g, '**')
+      .replace(/<\/strong>/g, '**')
+      .replace(/<em>/g, '*')
+      .replace(/<\/em>/g, '*')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/<[^>]*>/g, '') // Strip remaining tags
+      .trim();
+  }
+  return content;
+};
+
 export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, onDelete }) => {
   const { t } = useTranslation();
   const { updateItem } = useCollectionStore();
   const [activeTab, setActiveTab] = useState<'review' | 'cover'>('review');
-  const [reviewContent, setReviewContent] = useState(item.userReview || '');
+  // Clean content on init
+  const [reviewContent, setReviewContent] = useState(() => cleanInitialContent(item.userReview));
   const [isSaving, setIsSaving] = useState(false);
+  const [viewMode, setViewMode] = useState<'edit' | 'split' | 'preview'>('edit');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Image Upload & Crop State
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -30,9 +55,9 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-save effect (basic implementation)
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
-      if (reviewContent !== (item.userReview || '')) {
+      if (reviewContent !== cleanInitialContent(item.userReview || '')) {
         handleSave(true);
       }
     }, 3000);
@@ -128,9 +153,49 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
     }
   };
 
+  // Formatting Helpers
+  const insertFormat = (prefix: string, suffix: string) => {
+    if (!textareaRef.current) return;
+    
+    const start = textareaRef.current.selectionStart;
+    const end = textareaRef.current.selectionEnd;
+    const text = reviewContent;
+    
+    const before = text.substring(0, start);
+    const selected = text.substring(start, end);
+    const after = text.substring(end);
+    
+    const newText = before + prefix + selected + suffix + after;
+    setReviewContent(newText);
+    
+    // Reset cursor position
+    setTimeout(() => {
+        if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(start + prefix.length, end + prefix.length);
+        }
+    }, 0);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+      e.preventDefault();
+      insertFormat('**', '**');
+    } else if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+      e.preventDefault();
+      insertFormat('*', '*');
+    } else if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      insertFormat('[', '](url)');
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-4xl h-[80vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden bg-theme-surface border border-theme-border">
+      <div className={clsx(
+        "w-full flex flex-col rounded-2xl shadow-2xl overflow-hidden bg-theme-surface border border-theme-border h-[600px] transition-all duration-300",
+        viewMode === 'split' ? "max-w-6xl" : "max-w-3xl"
+      )}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-theme-border bg-theme-bg">
           <h2 className="text-xl font-bold text-theme-accent">
@@ -141,155 +206,227 @@ export const EditMediaModal: React.FC<EditMediaModalProps> = ({ item, onClose, o
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-          {/* Sidebar */}
-          <div className="w-full md:w-48 border-b md:border-b-0 md:border-r flex flex-row md:flex-col p-4 gap-2 border-theme-border bg-theme-surface overflow-x-auto md:overflow-visible flex-shrink-0">
-            <button
-              onClick={() => setActiveTab('review')}
-              className={clsx(
-                "w-auto md:w-full text-left px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap",
-                activeTab === 'review'
-                  ? "bg-theme-accent text-theme-bg"
-                  : "text-theme-subtext hover:bg-theme-bg"
-              )}
-            >
-              {t('edit_modal.tab_review')}
-            </button>
-            <button
-              onClick={() => setActiveTab('cover')}
-              className={clsx(
-                "w-auto md:w-full text-left px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap",
-                activeTab === 'cover'
-                  ? "bg-theme-accent text-theme-bg"
-                  : "text-theme-subtext hover:bg-theme-bg"
-              )}
-            >
-              {t('edit_modal.tab_cover')}
-            </button>
-            
-            <div className="flex-1" />
-            
-            <button
-              onClick={handleDelete}
-              className="w-auto md:w-full text-left px-4 py-2 rounded-lg font-medium text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2 whitespace-nowrap"
-            >
-              <Trash2 className="w-4 h-4" />
-              {t('edit_modal.delete_card')}
-            </button>
-          </div>
-
-          {/* Main Area */}
-          <div className="flex-1 p-6 overflow-y-auto relative bg-theme-bg">
-            {activeTab === 'review' && (
-              <div className="h-full flex flex-col">
-                <ReactQuill
-                  theme="snow"
-                  value={reviewContent}
-                  onChange={setReviewContent}
-                  className="h-[calc(100%-3rem)] mb-12 text-theme-text"
-                  modules={{
-                    toolbar: [
-                      [{ 'header': [1, 2, false] }],
-                      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-                      [{'list': 'ordered'}, {'list': 'bullet'}],
-                      [{ 'color': [] }, { 'background': [] }],
-                      ['clean']
-                    ],
-                  }}
-                />
-              </div>
+        {/* Tabs */}
+        <div className="flex items-center px-6 border-b border-theme-border bg-theme-bg/50">
+          <button
+            onClick={() => setActiveTab('review')}
+            className={clsx(
+              "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors",
+              activeTab === 'review'
+                ? "border-theme-accent text-theme-accent"
+                : "border-transparent text-theme-subtext hover:text-theme-text"
             )}
+          >
+            <FileText className="w-4 h-4" />
+            {t('edit_modal.tab_review')}
+          </button>
+          <button
+            onClick={() => setActiveTab('cover')}
+            className={clsx(
+              "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors",
+              activeTab === 'cover'
+                ? "border-theme-accent text-theme-accent"
+                : "border-transparent text-theme-subtext hover:text-theme-text"
+            )}
+          >
+            <ImageIcon className="w-4 h-4" />
+            {t('edit_modal.tab_cover')}
+          </button>
+        </div>
 
-            {activeTab === 'cover' && (
-              <div className="h-full flex flex-col gap-4">
-                <div className="flex gap-4 items-center">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors bg-theme-surface hover:bg-theme-bg text-theme-text border border-theme-border"
-                  >
-                    <Upload className="w-4 h-4" />
-                    {t('edit_modal.select_image')}
-                  </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden"
+        {/* Content */}
+        <div className="flex-1 p-6 overflow-y-auto bg-theme-bg relative">
+          {activeTab === 'review' && (
+            <div className="h-full flex flex-col">
+              {/* Toolbar */}
+              <div className="flex items-center gap-1 mb-2 pb-2 border-b border-theme-border/50">
+                <button
+                  onClick={() => insertFormat('**', '**')}
+                  className="p-2 rounded hover:bg-theme-surface text-theme-subtext hover:text-theme-accent transition-colors"
+                  title={t('edit_modal.bold_title')}
+                >
+                  <Bold className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => insertFormat('*', '*')}
+                  className="p-2 rounded hover:bg-theme-surface text-theme-subtext hover:text-theme-accent transition-colors"
+                  title={t('edit_modal.italic_title')}
+                >
+                  <Italic className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => insertFormat('[', '](url)')}
+                  className="p-2 rounded hover:bg-theme-surface text-theme-subtext hover:text-theme-accent transition-colors"
+                  title={t('edit_modal.link_title')}
+                >
+                  <LinkIcon className="w-4 h-4" />
+                </button>
+                 <button
+                  onClick={() => insertFormat('- ', '')}
+                  className="p-2 rounded hover:bg-theme-surface text-theme-subtext hover:text-theme-accent transition-colors"
+                  title={t('edit_modal.list_title')}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+                <div className="w-px h-4 bg-theme-border mx-2" />
+                <button
+                  onClick={() => setViewMode(viewMode === 'split' ? 'edit' : 'split')}
+                  className={clsx(
+                    "p-2 rounded transition-colors flex items-center gap-2 text-xs font-medium",
+                    viewMode === 'split'
+                      ? "bg-theme-accent text-theme-bg" 
+                      : "hover:bg-theme-surface text-theme-subtext hover:text-theme-text"
+                  )}
+                  title={t('edit_modal.split_view_title')}
+                >
+                  <Columns className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('edit_modal.split')}</span>
+                </button>
+                <button
+                  onClick={() => setViewMode(viewMode === 'preview' ? 'edit' : 'preview')}
+                  className={clsx(
+                    "p-2 rounded transition-colors flex items-center gap-2 text-xs font-medium",
+                    viewMode === 'preview'
+                      ? "bg-theme-accent text-theme-bg" 
+                      : "hover:bg-theme-surface text-theme-subtext hover:text-theme-text"
+                  )}
+                  title={t('edit_modal.preview_title')}
+                >
+                  {viewMode === 'preview' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <span className="hidden sm:inline">{viewMode === 'preview' ? t('edit_modal.edit') : t('edit_modal.preview')}</span>
+                </button>
+              </div>
+
+              <div className="flex-1 flex gap-4 overflow-hidden min-h-0">
+                {(viewMode === 'edit' || viewMode === 'split') && (
+                  <textarea
+                    ref={textareaRef}
+                    value={reviewContent}
+                    onChange={(e) => setReviewContent(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={t('edit_modal.markdown_placeholder')}
+                    className={clsx(
+                      "h-full p-4 rounded-xl border bg-theme-surface border-theme-border text-theme-text focus:ring-2 focus:ring-theme-accent focus:border-transparent outline-none resize-none font-mono text-sm leading-relaxed",
+                      viewMode === 'split' ? "w-1/2" : "w-full flex-1"
+                    )}
                   />
-                  {imageSrc && (
-                    <button
-                      onClick={() => { setImageSrc(null); setZoom(1); }}
-                      className="px-4 py-2 rounded-lg flex items-center gap-2 text-theme-subtext hover:bg-theme-surface transition-colors"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                      {t('edit_modal.reset')}
-                    </button>
-                  )}
-                </div>
-
-                <div className="relative flex-1 bg-theme-subtext/10 rounded-xl overflow-hidden min-h-[400px]">
-                  {imageSrc ? (
-                    <Cropper
-                      image={imageSrc}
-                      crop={crop}
-                      zoom={zoom}
-                      aspect={2 / 3} // Standard Poster Aspect Ratio
-                      onCropChange={setCrop}
-                      onCropComplete={onCropComplete}
-                      onZoomChange={setZoom}
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-theme-subtext flex-col gap-2">
-                      <div className="w-48 h-72 border-2 border-dashed border-theme-border rounded-lg flex items-center justify-center">
-                        {t('edit_modal.no_image_selected')}
-                      </div>
-                      <p>{t('edit_modal.upload_instruction')}</p>
-                    </div>
-                  )}
-                </div>
+                )}
                 
+                {(viewMode === 'preview' || viewMode === 'split') && (
+                    <div className={clsx(
+                       "h-full p-4 rounded-xl border bg-theme-surface border-theme-border text-theme-text overflow-y-auto prose prose-sm max-w-none",
+                       viewMode === 'split' ? "w-1/2" : "w-full flex-1"
+                    )}>
+                       <ReactMarkdown>{reviewContent || t('edit_modal.no_content')}</ReactMarkdown>
+                    </div>
+                 )}
+              </div>
+              
+              <div className="mt-2 text-xs text-theme-subtext flex justify-between">
+                <span>{t('edit_modal.markdown_supported')}</span>
+                <span className="opacity-50">{reviewContent.length} {t('edit_modal.chars')}</span>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'cover' && (
+            <div className="h-full flex flex-col gap-4">
+              <div className="flex gap-4 items-center">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors bg-theme-surface hover:bg-theme-bg text-theme-text border border-theme-border"
+                >
+                  <Upload className="w-4 h-4" />
+                  {t('edit_modal.select_image')}
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
                 {imageSrc && (
-                   <div className="flex items-center gap-2 px-4">
-                      <span className="text-sm text-theme-text">{t('edit_modal.zoom')}</span>
-                      <input
-                        type="range"
-                        value={zoom}
-                        min={1}
-                        max={3}
-                        step={0.1}
-                        aria-labelledby="Zoom"
-                        onChange={(e) => setZoom(Number(e.target.value))}
-                        className="w-full h-1 bg-theme-border rounded-lg appearance-none cursor-pointer"
-                      />
-                   </div>
+                  <button
+                    onClick={() => { setImageSrc(null); setZoom(1); }}
+                    className="px-4 py-2 rounded-lg flex items-center gap-2 text-theme-subtext hover:bg-theme-surface transition-colors"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    {t('edit_modal.reset')}
+                  </button>
                 )}
               </div>
-            )}
-          </div>
+
+              <div className="relative flex-1 bg-theme-subtext/10 rounded-xl overflow-hidden min-h-[300px]">
+                {imageSrc ? (
+                  <Cropper
+                    image={imageSrc}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={2 / 3} // Standard Poster Aspect Ratio
+                    onCropChange={setCrop}
+                    onCropComplete={onCropComplete}
+                    onZoomChange={setZoom}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-theme-subtext flex-col gap-2">
+                    <div className="w-32 h-48 border-2 border-dashed border-theme-border rounded-lg flex items-center justify-center">
+                      {t('edit_modal.no_image_selected')}
+                    </div>
+                    <p className="text-sm">{t('edit_modal.upload_instruction')}</p>
+                  </div>
+                )}
+              </div>
+              
+              {imageSrc && (
+                 <div className="flex items-center gap-2 px-4">
+                    <span className="text-sm text-theme-text">{t('edit_modal.zoom')}</span>
+                    <input
+                      type="range"
+                      value={zoom}
+                      min={1}
+                      max={3}
+                      step={0.1}
+                      aria-labelledby="Zoom"
+                      onChange={(e) => setZoom(Number(e.target.value))}
+                      className="w-full h-1 bg-theme-border rounded-lg appearance-none cursor-pointer"
+                    />
+                 </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t flex justify-end gap-3 border-theme-border bg-theme-bg">
+        <div className="px-6 py-4 border-t flex justify-between items-center gap-3 border-theme-border bg-theme-bg">
           <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg font-medium transition-colors text-theme-subtext hover:text-theme-text"
+            onClick={handleDelete}
+            className="px-4 py-2 rounded-lg font-medium text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2"
           >
-            {t('common.cancel')}
+            <Trash2 className="w-4 h-4" />
+            {t('edit_modal.delete_card')}
           </button>
-          <button
-            onClick={() => handleSave(false)}
-            disabled={isSaving}
-            className={clsx(
-              "px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors",
-              "bg-theme-accent text-theme-bg hover:bg-theme-accent-hover",
-              isSaving && "opacity-50 cursor-not-allowed"
-            )}
-          >
-            <Save className="w-4 h-4" />
-            {isSaving ? t('common.saving') : t('edit_modal.save_changes')}
-          </button>
+
+          <div className="flex gap-3">
+            <button
+                onClick={onClose}
+                className="px-4 py-2 rounded-lg font-medium transition-colors text-theme-subtext hover:text-theme-text"
+            >
+                {t('common.cancel')}
+            </button>
+            <button
+                onClick={() => handleSave(false)}
+                disabled={isSaving}
+                className={clsx(
+                "px-6 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors",
+                "bg-theme-accent text-theme-bg hover:bg-theme-accent-hover",
+                isSaving && "opacity-50 cursor-not-allowed"
+                )}
+            >
+                <Save className="w-4 h-4" />
+                {isSaving ? t('common.saving') : t('edit_modal.save_changes')}
+            </button>
+          </div>
         </div>
       </div>
     </div>

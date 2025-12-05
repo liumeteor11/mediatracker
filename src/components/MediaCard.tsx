@@ -7,6 +7,7 @@ import { useThemeStore } from '../store/useThemeStore';
 import { useCollectionStore } from '../store/useCollectionStore';
 import { EditMediaModal } from './EditMediaModal';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
 
 interface MediaCardProps {
   item: MediaItem;
@@ -203,15 +204,15 @@ export const MediaCard: React.FC<MediaCardProps> = ({
 
               {/* User Review Snippet (Collection Mode) */}
               {variant === 'collection' && item.userReview && (
-                <div className="mb-3 p-2 rounded text-xs line-clamp-3 italic border bg-theme-bg border-theme-border text-theme-subtext">
-                  <div dangerouslySetInnerHTML={{ __html: item.userReview.replace(/<[^>]+>/g, ' ').substring(0, 100) + '...' }} />
+                <div className="mb-3 p-2 rounded border bg-theme-bg border-theme-border text-theme-subtext overflow-hidden max-h-24 prose prose-sm max-w-none prose-p:text-xs prose-p:text-theme-subtext prose-p:m-0 prose-p:leading-relaxed prose-headings:text-xs prose-headings:text-theme-subtext prose-headings:m-0 prose-ul:m-0 prose-li:m-0 prose-li:text-theme-subtext">
+                   <ReactMarkdown>{item.userReview}</ReactMarkdown>
                 </div>
               )}
               
               {item.isOngoing && (
                 <div className="flex items-center gap-2 text-xs 2xl:text-sm font-medium text-theme-accent mb-3">
                   <Clock className="w-3 h-3 2xl:w-4 2xl:h-4" />
-                  <span>Ongoing Series</span>
+                  <span>{t('media_card.ongoing')}</span>
                 </div>
               )}
 
@@ -219,7 +220,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
               {item.isOngoing && item.category && (
                 <div className="mt-2 p-3 2xl:p-4 rounded-lg mb-3 border bg-theme-bg/50 border-theme-border">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] 2xl:text-xs font-bold uppercase tracking-wider text-theme-accent">Tracking</span>
+                    <span className="text-[10px] 2xl:text-xs font-bold uppercase tracking-wider text-theme-accent">{t('media_card.tracking')}</span>
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -231,7 +232,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                           ? "text-theme-accent"
                           : "text-theme-subtext"
                       )}
-                      title="Toggle Updates"
+                      title={t('media_card.toggle_updates')}
                     >
                       {item.notificationEnabled ? <Bell className="w-3.5 h-3.5 2xl:w-4 2xl:h-4" /> : <BellOff className="w-3.5 h-3.5 2xl:w-4 2xl:h-4" />}
                     </button>
@@ -239,15 +240,15 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                   
                   <div className="space-y-2 2xl:space-y-3">
                     <div className="flex justify-between items-center text-xs 2xl:text-sm">
-                      <span className="text-theme-subtext">Latest:</span>
+                      <span className="text-theme-subtext">{t('media_card.latest')}</span>
                       <span className="font-medium text-theme-text">
-                        {item.latestUpdateInfo || 'Unknown'}
+                        {item.latestUpdateInfo || t('media_card.unknown')}
                       </span>
                     </div>
                     
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] 2xl:text-xs text-theme-subtext">
-                        My Progress
+                        {t('media_card.my_progress')}
                       </label>
                       <input 
                         type="text"
@@ -265,16 +266,34 @@ export const MediaCard: React.FC<MediaCardProps> = ({
 
             {/* Actions */}
             {variant === 'collection' ? (
-              <div className="mt-4">
+              <div className="mt-4 flex gap-2">
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsEditModalOpen(true);
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-colors bg-theme-accent text-theme-bg hover:bg-theme-accent-hover"
+                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-colors bg-theme-accent text-theme-bg hover:bg-theme-accent-hover"
                 >
                   <Edit className="w-4 h-4" />
-                  Manage & Edit
+                  {t('media_card.edit')}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Use setTimeout to prevent event propagation issues with window.confirm blocking
+                    setTimeout(() => {
+                      if (window.confirm(t('edit_modal.delete_confirm'))) {
+                        removeFromCollection(item.id);
+                      }
+                    }, 0);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-medium transition-colors bg-red-500 text-white hover:bg-red-600"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {t('media_card.delete')}
                 </button>
               </div>
             ) : (
@@ -283,26 +302,26 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                   <button
                     onClick={(e) => { e.stopPropagation(); onAction(item, CollectionCategory.FAVORITES); }}
                     className="flex flex-col items-center justify-center p-2 rounded-lg transition-colors hover:bg-theme-bg text-theme-subtext hover:text-red-500"
-                    title="Favorite"
+                    title={t('media_card.action_favorite_title')}
                   >
                     <Heart className="w-5 h-5 mb-1" />
-                    <span className="text-[10px]">Like</span>
+                    <span className="text-[10px]">{t('media_card.action_like')}</span>
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); onAction(item, CollectionCategory.TO_WATCH); }}
                     className="flex flex-col items-center justify-center p-2 rounded-lg transition-colors hover:bg-theme-bg text-theme-subtext hover:text-blue-500"
-                    title="To Watch"
+                    title={t('media_card.action_towatch_title')}
                   >
                     <Bookmark className="w-5 h-5 mb-1" />
-                    <span className="text-[10px]">Save</span>
+                    <span className="text-[10px]">{t('media_card.action_save')}</span>
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); onAction(item, CollectionCategory.WATCHED); }}
                     className="flex flex-col items-center justify-center p-2 rounded-lg transition-colors hover:bg-theme-bg text-theme-subtext hover:text-green-500"
-                    title="Watched"
+                    title={t('media_card.action_watched_title')}
                   >
                     <Check className="w-5 h-5 mb-1" />
-                    <span className="text-[10px]">Done</span>
+                    <span className="text-[10px]">{t('media_card.action_done')}</span>
                   </button>
                 </div>
               )
